@@ -22,7 +22,7 @@ public class SmartWatch : Device, IPowerNotifier
         }
     }
     
-    public SmartWatch(int id, string name, bool isOn, int batteryCharge) : base(id, name, isOn)
+    public SmartWatch(string id, string name, bool isOn, int batteryCharge) : base(id, name, isOn)
     {
         _batteryCharge = batteryCharge;
     }
@@ -39,5 +39,10 @@ public class SmartWatch : Device, IPowerNotifier
     public void NotifyLowPower()
     {
         Console.WriteLine("Low Power (less than 20)");
+    }
+    
+    public override string ToString()
+    {
+        return $"{base.ToString()} - {_batteryCharge}";
     }
 }

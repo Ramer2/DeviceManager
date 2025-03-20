@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using DeviceManager.devices;
 
 namespace DeviceManager;
@@ -37,11 +33,13 @@ public class DeviceManager
                 }
 
                 var type = parts[0].Trim();
-                if (!int.TryParse(parts[1].Trim(), out var id))
+                if (!int.TryParse(parts[1].Trim(), out var idNumber))
                 {
                     Console.WriteLine($"Skipping corrupted line (invalid ID): {line}");
                     continue;
                 }
+
+                string id = $"{type}-{idNumber}";
 
                 var name = parts[2].Trim();
                 switch (type)
@@ -113,7 +111,7 @@ public class DeviceManager
         }
     }
     
-    public void EditDevice(string deviceType, int id, Device updatedDevice)
+    public void EditDevice(string id, Device updatedDevice)
     {
         var existingDevice = _devices.FirstOrDefault(d => d._id == id);
         if (existingDevice == null)
@@ -124,62 +122,25 @@ public class DeviceManager
         
         _devices.Remove(existingDevice);
         updatedDevice._id = id;
-        switch (deviceType)
-        {
-            case "SW":
-                if (updatedDevice is SmartWatch sw)
-                {
-                    if (sw.BatteryCharge < 0 || sw.BatteryCharge > 100)
-                    {
-                        Console.WriteLine("Invalid battery value. Must be between 0 and 100.");
-                        return;
-                    }
-                    _devices.Add(sw);
-                }
-                else
-                {
-                    Console.WriteLine("Invalid device type. Expected a SmartWatch.");
-                }
-                break;
-
-            case "P":
-                if (updatedDevice is PersonalComputer pc)
-                {
-                    _devices.Add(pc);
-                }
-                break;
-
-            case "ED":
-                if (updatedDevice is EmbeddedDevice ed)
-                {
-                    if (!Regex.IsMatch(ed.IpAddress, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"))
-                    {
-                        Console.WriteLine("Invalid IP format.");
-                        return;
-                    }
-                    _devices.Add(ed);
-                }
-                break;
-
-            default:
-                Console.WriteLine("Unknown device type.");
-                return;
-        }
-
-        Console.WriteLine($"Device ID {id} successfully updated.");
+        
+        _devices.Add(updatedDevice);
+        Console.WriteLine($"Device {id} successfully updated.");
     }
-
 
     public void AddDevice(Device device)
     {
         if (_devices.Count >= MaxDevices)
-            throw new Exception("Device storage full.");
+        {
+            Console.WriteLine("Device storage full.");
+            return;
+        }
         _devices.Add(device);
     }
 
-    public void RemoveDevice(int id)
+    public void RemoveDevice(string id)
     {
         _devices.RemoveAll(d => d._id == id);
+        Console.WriteLine($"Device {id} removed.");
     }
 
     public void ShowAllDevices()
@@ -192,10 +153,12 @@ public class DeviceManager
     {
         try
         {
-            var writer = new StreamWriter(_filePath, true);
-            foreach (var device in _devices)
+            using (var writer = new StreamWriter(_filePath, false))
             {
-                writer.WriteLine(device.ToString());
+                foreach (var device in _devices)
+                {
+                    writer.WriteLine(device.ToString());
+                }
             }
             Console.WriteLine("Devices successfully saved to file.");
         }
@@ -205,4 +168,8 @@ public class DeviceManager
         }
     }
 
+    public Device? GetDeviceById(string id)
+    {
+        return _devices.FirstOrDefault(d => d._id == id);
+    }
 }

@@ -2,11 +2,11 @@
 
 public class Device
 {
-    protected internal int _id {get; set;}
+    protected internal string _id {get; set;}
     protected string _name {get; set;}
     protected bool _isOn {get; set;}
 
-    public Device(int id, string name, bool isOn)
+    public Device(string id, string name, bool isOn)
     {
         _id = id;
         _name = name;

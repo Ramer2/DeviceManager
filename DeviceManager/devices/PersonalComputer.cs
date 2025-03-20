@@ -6,7 +6,7 @@ public class PersonalComputer : Device
 {
     private string _operatingSystem { get; set; }
 
-    public PersonalComputer(int id, string name, bool isOn, string os) : base(id, name, isOn)
+    public PersonalComputer(string id, string name, bool isOn, string os) : base(id, name, isOn)
     {
         _operatingSystem = os;
     }
@@ -17,5 +17,10 @@ public class PersonalComputer : Device
             throw new Exception("EmptySystemException: No OS installed.");
         
         base.TurnOn();
+    }
+    
+    public override string ToString()
+    {
+        return $"{base.ToString()} - {_operatingSystem}";
     }
 }

@@ -9,7 +9,7 @@ public class EmbeddedDevice : Device
     public string IpAddress { get; private set; }
     private string _networkName { get; set; }
 
-    public EmbeddedDevice(int id, string name, bool isOn, string ip, string network) : base(id, name, isOn)
+    public EmbeddedDevice(string id, string name, bool isOn, string ip, string network) : base(id, name, isOn)
     {
         SetIPAddress(ip);
         _networkName = network;
@@ -35,5 +35,10 @@ public class EmbeddedDevice : Device
     {
         Connect();
         base.TurnOn();
+    }
+
+    public override string ToString()
+    {
+        return $"{base.ToString()} - {IpAddress} - {_networkName}";
     }
 }

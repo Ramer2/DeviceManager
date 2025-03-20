@@ -1,0 +1,16 @@
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\bin\Debug\net8.0\DeviceManager.exe
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\bin\Debug\net8.0\DeviceManager.deps.json
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\bin\Debug\net8.0\DeviceManager.runtimeconfig.json
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\bin\Debug\net8.0\DeviceManager.dll
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\bin\Debug\net8.0\DeviceManager.pdb
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.AssemblyInfoInputs.cache
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.AssemblyInfo.cs
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.csproj.CoreCompileInputs.cache
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.sourcelink.json
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.dll
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\refint\DeviceManager.dll
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.pdb
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\DeviceManager.genruntimeconfig.cache
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\obj\Debug\net8.0\ref\DeviceManager.dll
+C:\Users\sisoe\RiderProjects\DeviceManager_s30422\DeviceManager\bin\Debug\net8.0\input.txt
