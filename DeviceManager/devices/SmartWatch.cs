@@ -1,5 +1,4 @@
-﻿using System;
-using DeviceManager.exceptions;
+﻿using DeviceManager.exceptions;
 
 namespace DeviceManager.devices;
 
@@ -24,6 +23,10 @@ public class SmartWatch : Device, IPowerNotifier
     
     public SmartWatch(string id, string name, bool isOn, int batteryCharge) : base(id, name, isOn)
     {
+        if (batteryCharge < 0 || batteryCharge > 100)
+            throw new ArgumentOutOfRangeException(
+                "Can't set the battery charge to a negative value or to a value greater than 100");
+        
         _batteryCharge = batteryCharge;
     }
 

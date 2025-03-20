@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using DeviceManager.exceptions;
 using ArgumentException = DeviceManager.exceptions.ArgumentException;
 
 namespace DeviceManager.devices;
@@ -26,7 +27,7 @@ public class EmbeddedDevice : Device
     public void Connect()
     {
         if (!_networkName.Contains("MD Ltd."))
-            throw new Exception("ConnectionException: Network not allowed.");
+            throw new ConnectionException();
         
         Console.WriteLine($"{_name} connected successfully.");
     }

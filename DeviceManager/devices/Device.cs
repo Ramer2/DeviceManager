@@ -2,9 +2,9 @@
 
 public class Device
 {
-    protected internal string _id {get; set;}
-    protected string _name {get; set;}
-    protected bool _isOn {get; set;}
+    public string _id {get; set;}
+    public string _name {get; set;}
+    public bool _isOn {get; set;}
 
     public Device(string id, string name, bool isOn)
     {

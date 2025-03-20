@@ -1,4 +1,4 @@
-﻿using System;
+﻿using DeviceManager.exceptions;
 
 namespace DeviceManager.devices;
 
@@ -14,7 +14,7 @@ public class PersonalComputer : Device
     public override void TurnOn()
     {
         if (string.IsNullOrEmpty(_operatingSystem))
-            throw new Exception("EmptySystemException: No OS installed.");
+            throw new EmptySystemException();
         
         base.TurnOn();
     }
