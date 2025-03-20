@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using DeviceManager.devices;
 
@@ -111,6 +112,63 @@ public class DeviceManager
             }
         }
     }
+    
+    public void EditDevice(string deviceType, int id, Device updatedDevice)
+    {
+        var existingDevice = _devices.FirstOrDefault(d => d._id == id);
+        if (existingDevice == null)
+        {
+            Console.WriteLine($"No device found with ID {id}.");
+            return;
+        }
+        
+        _devices.Remove(existingDevice);
+        updatedDevice._id = id;
+        switch (deviceType)
+        {
+            case "SW":
+                if (updatedDevice is SmartWatch sw)
+                {
+                    if (sw.BatteryCharge < 0 || sw.BatteryCharge > 100)
+                    {
+                        Console.WriteLine("Invalid battery value. Must be between 0 and 100.");
+                        return;
+                    }
+                    _devices.Add(sw);
+                }
+                else
+                {
+                    Console.WriteLine("Invalid device type. Expected a SmartWatch.");
+                }
+                break;
+
+            case "P":
+                if (updatedDevice is PersonalComputer pc)
+                {
+                    _devices.Add(pc);
+                }
+                break;
+
+            case "ED":
+                if (updatedDevice is EmbeddedDevice ed)
+                {
+                    if (!Regex.IsMatch(ed.IpAddress, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"))
+                    {
+                        Console.WriteLine("Invalid IP format.");
+                        return;
+                    }
+                    _devices.Add(ed);
+                }
+                break;
+
+            default:
+                Console.WriteLine("Unknown device type.");
+                return;
+        }
+
+        Console.WriteLine($"Device ID {id} successfully updated.");
+    }
+
 
     public void AddDevice(Device device)
     {

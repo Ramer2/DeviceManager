@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="obj\DeviceManager.csproj.nuget.dgspec.json" />
+      <Content Include="obj\DeviceManager.csproj.nuget.g.props" />
+      <Content Include="obj\DeviceManager.csproj.nuget.g.targets" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.nuget.cache" />
+      <Content Include="obj\rider.project.model.nuget.info" />
+    </ItemGroup>
+
+</Project>
