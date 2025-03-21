@@ -1,0 +1,10 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/CreateUnitTestDialog/TestProjectMapping/=72342002_002D13A4_002D4DF2_002DB2DD_002D4E053DA6C004/@EntryIndexedValue">95E0EB62-3A2D-4B90-BF59-40C5204B0AE6</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/CreateUnitTestDialog/TestTemplateMapping/=MSTest/@EntryIndexedValue">d6790ab7-33c2-4425-b2c9-51480cd1a852</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6363c55f_002D22cb_002D41f9_002Dbec2_002D404ca84fa6ae/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="EmbeddedDeviceTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::95E0EB62-3A2D-4B90-BF59-40C5204B0AE6::net8.0::DeviceManager.Test.devices.EmbeddedDeviceTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::95E0EB62-3A2D-4B90-BF59-40C5204B0AE6::net8.0::DeviceManager.Test.devices.SmartWatchTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::95E0EB62-3A2D-4B90-BF59-40C5204B0AE6::net8.0::DeviceManager.Test.DeviceManagerTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
