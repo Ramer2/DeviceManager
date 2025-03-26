@@ -8,8 +8,8 @@ public class EmbeddedDevice : Device
 {
     public string IpAddress { get; private set; }
     private string _networkName { get; set; }
-    
-    private bool _isConnected { get; set; }
+
+    public bool _isConnected { get; set; }
 
     public EmbeddedDevice(string id, string name, bool isOn, string ip, string network) : base(id, name, isOn)
     {
@@ -50,6 +50,12 @@ public class EmbeddedDevice : Device
     {
         Connect();
         base.TurnOn();
+    }
+
+    public override void TurnOff()
+    {
+        Disconnect();
+        base.TurnOff();
     }
 
     public override string ToString()
