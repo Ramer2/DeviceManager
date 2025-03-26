@@ -1,23 +1,53 @@
 ﻿using DeviceManager.devices;
 
+// loading devices
 var filePath = "input.txt";
 var dm = new DeviceManager.DeviceManager(filePath);
 
-dm.ShowAllDevices();
-Console.WriteLine();
+// displaying all devices
+try
+{
+    dm.ShowAllDevices();
+    Console.WriteLine();
+}
+catch (Exception e)
+{
+    Console.WriteLine("Exception when displaying all devices");
+}
 
-// add a new device
-var newWatch = new SmartWatch("SW-5", "Fitbit Versa", false, 75);
-dm.AddDevice(newWatch);
-Console.WriteLine();
+try
+{
+    // add a new device
+    var newWatch = new SmartWatch("SW-5", "Fitbit Versa", false, 75);
+    dm.AddDevice(newWatch);
+    Console.WriteLine();
+}
+catch (Exception e)
+{
+    Console.WriteLine("Exception when adding a new device");
+}
 
-// edit device
-var updatedPC = new PersonalComputer("P-2", "Updated ThinkPad", false, "Windows 11");
-dm.EditDevice("P-2", updatedPC);
-Console.WriteLine();
+try
+{
+    // edit device
+    var updatedPC = new PersonalComputer("P-2", "Updated ThinkPad", false, "Windows 11");
+    dm.EditDevice("P-2", updatedPC);
+    Console.WriteLine();
 
-dm.ShowAllDevices();
-Console.WriteLine();
+    dm.ShowAllDevices();
+    Console.WriteLine();
+}
+catch (Exception e)
+{
+    Console.WriteLine("Exception when editing a device");
+}
 
-// Save changes to file
-dm.SaveToFile();
+try
+{
+    // Save changes to file
+    dm.SaveToFile();
+}
+catch (Exception e)
+{
+    Console.WriteLine("Exception when saving devices");
+}
