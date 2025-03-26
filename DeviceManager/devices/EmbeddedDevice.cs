@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using DeviceManager.exceptions;
 using ArgumentException = DeviceManager.exceptions.ArgumentException;
 
@@ -9,11 +8,14 @@ public class EmbeddedDevice : Device
 {
     public string IpAddress { get; private set; }
     private string _networkName { get; set; }
+    
+    private bool _isConnected { get; set; }
 
     public EmbeddedDevice(string id, string name, bool isOn, string ip, string network) : base(id, name, isOn)
     {
         SetIPAddress(ip);
         _networkName = network;
+        _isConnected = false;
     }
 
     public void SetIPAddress(string ip)
@@ -29,7 +31,19 @@ public class EmbeddedDevice : Device
         if (!_networkName.Contains("MD Ltd."))
             throw new ConnectionException();
         
+        _isConnected = true;
         Console.WriteLine($"{_name} connected successfully.");
+    }
+
+    public void Disconnect()
+    {
+        if (!_isConnected)
+        {
+            Console.WriteLine($"{_name} is already disconnected.");
+            return;
+        } 
+        _isConnected = false;
+        Console.WriteLine($"{_name} was disconnected.");
     }
 
     public override void TurnOn()

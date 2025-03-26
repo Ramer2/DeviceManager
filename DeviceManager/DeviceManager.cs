@@ -78,7 +78,7 @@ public class DeviceManager
                         continue;
                     }
 
-                    var os = parts.Length > 4 ? parts[3].Trim() : "NoOS";
+                    var os = parts.Length > 3 ? parts[3].Trim() : "NoOS";
                     AddDevice(new PersonalComputer(id, name, isOn, os));
                     break;
 
