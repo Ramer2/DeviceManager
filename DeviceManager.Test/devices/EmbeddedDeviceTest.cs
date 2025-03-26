@@ -18,4 +18,15 @@ public class EmbeddedDeviceTest
             ed.TurnOn();
         });
     }
+
+    [TestMethod]
+    public void TestDisconnectSuccessful()
+    {
+        var ed = new EmbeddedDevice("ED-5", "ED", false, "127.0.0.1", "MD Ltd. network");
+        // turn on the device
+        ed.TurnOn();
+        // disconnect the device
+        ed.Disconnect();
+        Assert.IsFalse(ed._isConnected);
+    }
 }
