@@ -72,13 +72,15 @@ public class DeviceManager
                                 Console.WriteLine($"Skipping corrupted line (invalid battery percentage): {line}");
                                 continue;
                             }
-                            _devices.Add(new SmartWatch(id, name, isOn, battery));
+
+                            AddDevice(new SmartWatch(id, name, isOn, battery));
                         }
                         else
                         {
                             var os = parts.Length > 4 ? parts[4].Trim() : "NoOS";
-                            _devices.Add(new PersonalComputer(id, name, isOn, os));
+                            AddDevice(new PersonalComputer(id, name, isOn, os));
                         }
+
                         break;
                     case "ED":
                         if (parts.Length < 5)
@@ -89,14 +91,14 @@ public class DeviceManager
 
                         var ip = parts[3].Trim();
                         var network = parts[4].Trim();
-                        
+
                         if (!Regex.IsMatch(ip, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"))
                         {
                             Console.WriteLine($"Skipping corrupted line (invalid IP format): {line}");
                             continue;
                         }
 
-                        _devices.Add(new EmbeddedDevice(id, name, false, ip, network));
+                        AddDevice(new EmbeddedDevice(id, name, false, ip, network));
                         break;
 
                     default:
@@ -110,7 +112,7 @@ public class DeviceManager
             }
         }
     }
-    
+
     public void EditDevice(string id, Device updatedDevice)
     {
         var existingDevice = _devices.FirstOrDefault(d => d._id == id);
@@ -123,7 +125,7 @@ public class DeviceManager
         _devices.Remove(existingDevice);
         updatedDevice._id = id;
         
-        _devices.Add(updatedDevice);
+        AddDevice(updatedDevice);
         Console.WriteLine($"Device {id} successfully updated.");
     }
 
@@ -134,7 +136,15 @@ public class DeviceManager
             Console.WriteLine("Device storage full.");
             return;
         }
+    
+        if (_devices.Any(d => d._id == device._id))
+        {
+            Console.WriteLine($"Device with ID {device._id} already exists. Cannot add duplicate.");
+            return;
+        }
+    
         _devices.Add(device);
+        Console.WriteLine($"Device {device._id} successfully added.");
     }
 
     public void RemoveDevice(string id)
