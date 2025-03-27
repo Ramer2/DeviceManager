@@ -5,128 +5,122 @@ namespace DeviceManager;
 
 public class DeviceManager
 {
-    private List<Device> _devices = new List<Device>();
+    private readonly List<Device> _devices = [];
     private const int MaxDevices = 15;
     private readonly string _filePath;
 
-    public DeviceManager(string path)
+    private DeviceManager(string path)
     {
         _filePath = path;
         LoadDevices();
     }
 
-    private void LoadDevices()
-{
-    if (!File.Exists(_filePath)) return;
-
-    foreach (var line in File.ReadAllLines(_filePath))
+    public static DeviceManager Create(string path)
     {
-        try
+        return new DeviceManager(path);
+    }
+
+    private void LoadDevices()
+    {
+        if (!File.Exists(_filePath)) return;
+
+        foreach (var line in File.ReadAllLines(_filePath))
         {
-            var parts = line.Split(',');
-
-            if (parts.Length < 3)
+            try
             {
-                Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
-                continue;
+                var parts = line.Split(',');
+
+                if (parts.Length < 3)
+                {
+                    Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
+                    continue;
+                }
+
+                var id = parts[0].Trim();
+                var name = parts[1].Trim();
+
+                switch (id.Split('-')[0])
+                {
+                    case "SW":
+                        if (parts.Length < 4)
+                        {
+                            Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
+                            continue;
+                        }
+
+                        if (!bool.TryParse(parts[2].Trim(), out var isOn))
+                        {
+                            Console.WriteLine($"Skipping corrupted line (invalid IsOn value): {line}");
+                            continue;
+                        }
+
+                        if (parts.Length < 4)
+                        {
+                            Console.WriteLine($"Skipping corrupted line (missing battery data): {line}");
+                            continue;
+                        }
+
+                        var batteryStr = parts[3].Replace("%", "").Trim();
+                        if (!int.TryParse(batteryStr, out var battery))
+                        {
+                            Console.WriteLine($"Skipping corrupted line (invalid battery percentage): {line}");
+                            continue;
+                        }
+
+                        AddDevice(new SmartWatch(id, name, isOn, battery));
+                        break;
+
+                    case "P":
+                        if (parts.Length < 3)
+                        {
+                            Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
+                            continue;
+                        }
+
+                        if (!bool.TryParse(parts[2].Trim(), out isOn))
+                        {
+                            Console.WriteLine($"Skipping corrupted line (invalid IsOn value): {line}");
+                            continue;
+                        }
+
+                        var os = parts.Length > 3 ? parts[3].Trim() : "NoOS";
+                        AddDevice(new PersonalComputer(id, name, isOn, os));
+                        break;
+
+                    case "ED":
+                        if (parts.Length < 4)
+                        {
+                            Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
+                            continue;
+                        }
+
+                        var ip = parts[2].Trim();
+                        var network = parts[3].Trim();
+
+                        if (!Regex.IsMatch(ip, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"))
+                        {
+                            Console.WriteLine($"Skipping corrupted line (invalid IP format): {line}");
+                            continue;
+                        }
+
+                        AddDevice(new EmbeddedDevice(id, name, false, ip, network));
+                        break;
+
+                    default:
+                        Console.WriteLine($"Skipping corrupted line (unknown device type): {line}");
+                        break;
+                }
             }
-
-            var id = parts[0].Trim();
-            var name = parts[1].Trim();
-
-            switch (id.Split('-')[0])
+            catch (Exception ex)
             {
-                case "SW":
-                    if (parts.Length < 4)
-                    {
-                        Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
-                        continue;
-                    }
-
-                    if (!bool.TryParse(parts[2].Trim(), out var isOn))
-                    {
-                        Console.WriteLine($"Skipping corrupted line (invalid IsOn value): {line}");
-                        continue;
-                    }
-
-                    if (parts.Length < 5)
-                    {
-                        Console.WriteLine($"Skipping corrupted line (missing battery data): {line}");
-                        continue;
-                    }
-
-                    var batteryStr = parts[3].Replace("%", "").Trim();
-                    if (!int.TryParse(batteryStr, out var battery))
-                    {
-                        Console.WriteLine($"Skipping corrupted line (invalid battery percentage): {line}");
-                        continue;
-                    }
-
-                    AddDevice(new SmartWatch(id, name, isOn, battery));
-                    break;
-
-                case "P":
-                    if (parts.Length < 3)
-                    {
-                        Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
-                        continue;
-                    }
-
-                    if (!bool.TryParse(parts[2].Trim(), out isOn))
-                    {
-                        Console.WriteLine($"Skipping corrupted line (invalid IsOn value): {line}");
-                        continue;
-                    }
-
-                    var os = parts.Length > 3 ? parts[3].Trim() : "NoOS";
-                    AddDevice(new PersonalComputer(id, name, isOn, os));
-                    break;
-
-                case "ED":
-                    if (parts.Length < 4)
-                    {
-                        Console.WriteLine($"Skipping corrupted line (too few fields): {line}");
-                        continue;
-                    }
-
-                    var ip = parts[2].Trim();
-                    var network = parts[3].Trim();
-
-                    if (!Regex.IsMatch(ip, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"))
-                    {
-                        Console.WriteLine($"Skipping corrupted line (invalid IP format): {line}");
-                        continue;
-                    }
-
-                    AddDevice(new EmbeddedDevice(id, name, false, ip, network));
-                    break;
-
-                default:
-                    Console.WriteLine($"Skipping corrupted line (unknown device type): {line}");
-                    break;
+                Console.WriteLine($"Skipping corrupted line: {line}. Error: {ex.Message}");
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Skipping corrupted line: {line}. Error: {ex.Message}");
         }
     }
-}
-
-    public void EditDevice(string id, Device updatedDevice)
+    
+    public Device? GetDeviceById(string id)
     {
-        var existingDevice = _devices.FirstOrDefault(d => d._id == id);
-        if (existingDevice == null)
-        {
-            Console.WriteLine($"No device found with ID {id}.");
-            return;
-        }
-        
-        _devices.Remove(existingDevice);
-        updatedDevice._id = id;
-        
-        AddDevice(updatedDevice);
-        Console.WriteLine($"Device {id} successfully updated.");
+        return _devices.FirstOrDefault(d => d._id == id);
     }
 
     public void AddDevice(Device device)
@@ -145,6 +139,22 @@ public class DeviceManager
     
         _devices.Add(device);
         Console.WriteLine($"Device {device._id} successfully added.");
+    }
+
+    public void EditDevice(string id, Device updatedDevice)
+    {
+        var existingDevice = _devices.FirstOrDefault(d => d._id == id);
+        if (existingDevice == null)
+        {
+            Console.WriteLine($"No device found with ID {id}.");
+            return;
+        }
+        
+        _devices.Remove(existingDevice);
+        updatedDevice._id = id;
+        
+        AddDevice(updatedDevice);
+        Console.WriteLine($"Device {id} successfully updated.");
     }
 
     public void RemoveDevice(string id)
@@ -177,9 +187,12 @@ public class DeviceManager
             Console.WriteLine($"Error saving to file: {ex.Message}");
         }
     }
+}
 
-    public Device? GetDeviceById(string id)
+public static class DeviceManagerFactory
+{
+    public static DeviceManager CreateDeviceManager(string filePath)
     {
-        return _devices.FirstOrDefault(d => d._id == id);
+        return DeviceManager.Create(filePath);
     }
 }

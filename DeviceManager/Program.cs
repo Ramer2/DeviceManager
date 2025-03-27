@@ -1,8 +1,9 @@
-﻿using DeviceManager.devices;
+﻿using DeviceManager;
+using DeviceManager.devices;
 
 // loading devices
-var filePath = "input.txt";
-var dm = new DeviceManager.DeviceManager(filePath);
+const string filePath = "input.txt";
+var dm = DeviceManagerFactory.CreateDeviceManager(filePath);
 
 // displaying all devices
 try
@@ -13,6 +14,7 @@ try
 catch (Exception e)
 {
     Console.WriteLine("Exception when displaying all devices");
+    Console.WriteLine(e.Message);
 }
 
 try
@@ -25,13 +27,14 @@ try
 catch (Exception e)
 {
     Console.WriteLine("Exception when adding a new device");
+    Console.WriteLine(e.Message);
 }
 
 try
 {
     // edit device
-    var updatedPC = new PersonalComputer("P-2", "Updated ThinkPad", false, "Windows 11");
-    dm.EditDevice("P-2", updatedPC);
+    var updatedPc = new PersonalComputer("P-2", "Updated ThinkPad", false, "Windows 11");
+    dm.EditDevice("P-2", updatedPc);
     Console.WriteLine();
 
     dm.ShowAllDevices();
@@ -40,6 +43,7 @@ try
 catch (Exception e)
 {
     Console.WriteLine("Exception when editing a device");
+    Console.WriteLine(e.Message);
 }
 
 try
@@ -50,4 +54,5 @@ try
 catch (Exception e)
 {
     Console.WriteLine("Exception when saving devices");
+    Console.WriteLine(e.Message);
 }
