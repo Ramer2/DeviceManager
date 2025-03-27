@@ -1,11 +1,12 @@
-﻿using DeviceManager.devices;
+﻿using DeviceManager.deviceManager;
+using DeviceManager.devices;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeviceManager.Test.devices;
 
 [TestClass]
-[TestSubject(typeof(DeviceManager))]
+[TestSubject(typeof(deviceManager.DeviceManager))]
 public class DeviceManagerTest
 {
 

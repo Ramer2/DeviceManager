@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using DeviceManager.devices;
 
-namespace DeviceManager;
+namespace DeviceManager.deviceManager;
 
 public static class DeviceFactory
 {

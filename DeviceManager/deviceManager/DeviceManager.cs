@@ -1,8 +1,8 @@
 ﻿using DeviceManager.devices;
 
-namespace DeviceManager;
+namespace DeviceManager.deviceManager;
 
-public class DeviceManager
+public class DeviceManager : IDeviceManager
 {
     private readonly List<Device> _devices = [];
     private const int MaxDevices = 15;
@@ -106,7 +106,7 @@ public class DeviceManager
 
 public static class DeviceManagerFactory
 {
-    public static DeviceManager CreateDeviceManager(string filePath)
+    public static IDeviceManager CreateDeviceManager(string filePath)
     {
         return DeviceManager.Create(filePath);
     }

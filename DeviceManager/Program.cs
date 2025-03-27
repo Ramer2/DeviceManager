@@ -1,4 +1,5 @@
 ﻿using DeviceManager;
+using DeviceManager.deviceManager;
 using DeviceManager.devices;
 
 // loading devices
