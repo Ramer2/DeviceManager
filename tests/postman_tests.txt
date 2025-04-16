@@ -1,0 +1,32 @@
+﻿POST requests:
+https://localhost:7164/devices/smartWatches
+{
+    "id": "SW-2",
+    "name": "SmartWatch",
+    "isOn": false,
+    "batteryCharge": 18
+}
+
+https://localhost:7164/devices/personalComputers
+{
+    "id": "P-1",
+    "name": "Personal Computer",
+    "isOn": true,
+    "operatingSystem": "Windows"
+}
+
+https://localhost:7164/devices/embeddedDevices
+{
+    "id": "ED-1",
+    "name": "Embedded Device",
+    "isOn": false,
+    "ipAddress": "127.0.0.1",
+    "networkName": "localhost"
+}
+
+GET requests:
+https://localhost:7164/devices
+
+https://localhost:7164/devices/ED-1
+
+PUT requests:

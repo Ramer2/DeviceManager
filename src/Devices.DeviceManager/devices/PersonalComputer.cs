@@ -7,18 +7,18 @@ namespace Devices.devices;
 /// </summary>
 public class PersonalComputer : Device
 {
-    private string _operatingSystem { get; set; }
+    public string OperatingSystem { get; }
 
     /// <summary>
     /// Initializes a new instance of the PersonalComputer class.
     /// </summary>
-    /// <param name="_id">The unique device ID.</param>
-    /// <param name="_name">The name of the device.</param>
-    /// <param name="_isOn">Indicates whether the device is initially turned on.</param>
-    /// <param name="_operatingSystem">The operating system of the computer.</param>
-    public PersonalComputer(string _id, string _name, bool _isOn, string _operatingSystem) : base(_id, _name, _isOn)
+    /// <param name="id">The unique device ID.</param>
+    /// <param name="name">The name of the device.</param>
+    /// <param name="isOn">Indicates whether the device is initially turned on.</param>
+    /// <param name="operatingSystem">The operating system of the computer.</param>
+    public PersonalComputer(string id, string name, bool isOn, string operatingSystem) : base(id, name, isOn)
     {
-        this._operatingSystem = _operatingSystem;
+        OperatingSystem = operatingSystem;
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ public class PersonalComputer : Device
     /// </summary>
     public override void TurnOn()
     {
-        if (string.IsNullOrEmpty(_operatingSystem))
+        if (string.IsNullOrEmpty(OperatingSystem))
             throw new EmptySystemException();
         
         base.TurnOn();
@@ -38,6 +38,6 @@ public class PersonalComputer : Device
     /// <returns>A formatted string containing device details.</returns>
     public override string ToString()
     {
-        return $"{base.ToString()} - {_operatingSystem}";
+        return $"{base.ToString()} - {OperatingSystem}";
     }
 }

@@ -12,28 +12,29 @@ public class EmbeddedDevice : Device
     /// <summary>
     /// IP address of the embedded device.
     /// </summary>
-    public string IpAddress { get; private set; }
+    public string IpAddress { get; set; }
     
-    private string _networkName { get; set; }
+    public string NetworkName { get; }
 
     /// <summary>
     /// Indicator for whether the device is connected to a network.
     /// </summary>
-    private bool _isConnected { get; set; }
+    public bool IsConnected { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the EmbeddedDevice class.
     /// </summary>
-    /// <param name="_id">The unique device ID.</param>
-    /// <param name="_name">The name of the device.</param>
-    /// <param name="_isOn">Indicates whether the device is initially turned on.</param>
-    /// <param name="_ip">The IP address of the device.</param>
-    /// <param name="_network">The network name.</param>
-    public EmbeddedDevice(string _id, string _name, bool _isOn, string _ip, string _networkName) : base(_id, _name, _isOn)
+    /// <param name="id">The unique device ID.</param>
+    /// <param name="name">The name of the device.</param>
+    /// <param name="isOn">Indicates whether the device is initially turned on.</param>
+    /// <param name="ipAddress">The IP address of the device.</param>
+    /// <param name="networkName">The network name.</param>
+    public EmbeddedDevice(string id, string name, bool isOn, string ipAddress, string networkName) : base(id, name, isOn)
     {
-        SetIpAddress(_ip);
-        this._networkName = _networkName;
-        _isConnected = false;
+        SetIpAddress(ipAddress);
+        NetworkName = networkName;
+        IpAddress = ipAddress;
+        IsConnected = false;
     }
 
     /// <summary>
@@ -53,11 +54,11 @@ public class EmbeddedDevice : Device
     /// </summary>
     public void Connect()
     {
-        if (!_networkName.Contains("MD Ltd."))
+        if (!NetworkName.Contains("MD Ltd."))
             throw new ConnectionException();
         
-        _isConnected = true;
-        Console.WriteLine($"{_name} connected successfully.");
+        IsConnected = true;
+        Console.WriteLine($"{Name} connected successfully.");
     }
 
     /// <summary>
@@ -65,13 +66,13 @@ public class EmbeddedDevice : Device
     /// </summary>
     public void Disconnect()
     {
-        if (!_isConnected)
+        if (!IsConnected)
         {
-            Console.WriteLine($"{_name} is already disconnected.");
+            Console.WriteLine($"{Name} is already disconnected.");
             return;
         } 
-        _isConnected = false;
-        Console.WriteLine($"{_name} was disconnected.");
+        IsConnected = false;
+        Console.WriteLine($"{Name} was disconnected.");
     }
     
     /// <summary>
@@ -98,6 +99,6 @@ public class EmbeddedDevice : Device
     /// <returns>A formatted string containing device details.</returns>
     public override string ToString()
     {
-        return $"{base.ToString()} - {IpAddress} - {_networkName}";
+        return $"{base.ToString()} - {IpAddress} - {NetworkName}";
     }
 }
