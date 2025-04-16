@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManagerWithRest", "src\DeviceManagerWithRest\DeviceManagerWithRest.csproj", "{1214958D-29BA-46AD-9E9E-41101530D4F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManagerWithRest.DeviceManager", "src\DeviceManagerWithRest.DeviceManager\DeviceManagerWithRest.DeviceManager.csproj", "{1214958D-29BA-46AD-9E9E-41101530D4F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devices", "src\Devices\Devices.csproj", "{8A6596DD-263A-4918-8DA6-97AA048934CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devices.DeviceManager", "src\Devices.DeviceManager\Devices.DeviceManager.csproj", "{8A6596DD-263A-4918-8DA6-97AA048934CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
