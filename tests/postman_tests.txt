@@ -1,5 +1,5 @@
 ﻿POST requests:
-https://localhost:7164/devices/smartWatches
+https://localhost:7164/devices/smart-watches
 {
     "id": "SW-2",
     "name": "SmartWatch",
@@ -7,7 +7,7 @@ https://localhost:7164/devices/smartWatches
     "batteryCharge": 18
 }
 
-https://localhost:7164/devices/personalComputers
+https://localhost:7164/devices/personal-computers
 {
     "id": "P-1",
     "name": "Personal Computer",
@@ -15,7 +15,7 @@ https://localhost:7164/devices/personalComputers
     "operatingSystem": "Windows"
 }
 
-https://localhost:7164/devices/embeddedDevices
+https://localhost:7164/devices/embedded-devices
 {
     "id": "ED-1",
     "name": "Embedded Device",
@@ -30,3 +30,32 @@ https://localhost:7164/devices
 https://localhost:7164/devices/ED-1
 
 PUT requests:
+https://localhost:7164/devices/smart-watches/SW-2
+{
+    "id": "SW-2",
+    "name": "Updated SmartWatch",
+    "isOn": true,
+    "batteryCharge": 86
+}
+
+https://localhost:7164/devices/personal-computers/P-1
+{
+    "id": "P-1",
+    "name": "Updated Personal Computer",
+    "isOn": false,
+    "operatingSystem": "Windows"
+}
+
+https://localhost:7164/devices/embedded-devices/ED-1
+{
+    "id": "ED-1",
+    "name": "Updated Embedded Device",
+    "isOn": false,
+    "ipAddress": "127.0.0.1",
+    "networkName": "eduroam"
+}
+
+DELETE requests:
+https://localhost:7164/devices/SW-2
+https://localhost:7164/devices/P-1
+https://localhost:7164/devices/ED-1

@@ -26,7 +26,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPost]
-    [Route("/devices/smartWatches")]
+    [Route("/devices/smart-watches")]
     public IResult AddsSmartWatch([FromBody] SmartWatch smartWatch)
     {
         // check already taken id
@@ -40,7 +40,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPost]
-    [Route("/devices/personalComputers")]
+    [Route("/devices/personal-computers")]
     public IResult AddsPersonalComputer([FromBody] PersonalComputer personalComputer)
     {
         // check already taken id
@@ -54,7 +54,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPost]
-    [Route("/devices/embeddedDevices")]
+    [Route("/devices/embedded-devices")]
     public IResult AddsEmbeddedDevice([FromBody] EmbeddedDevice embeddedDevice)
     {
         // check already taken id
@@ -68,8 +68,50 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPut]
-    [Route("/devices/{id}")]
-    public IResult UpdateDevice(string id, [FromBody] Device updatedDevice)
+    [Route("/devices/smart-watches/{id}")]
+    public IResult UpdateSmartWatch(string id, [FromBody] SmartWatch updatedDevice)
+    {
+        // check indexes
+        if (id != updatedDevice.Id)
+        {
+            return Results.BadRequest("Id's in passed device and in the URL must match");
+        }
+        
+        var index = Devices.FindIndex(d => d.Id == id);
+        if (index == -1)
+        {
+            return Results.NotFound("Device with this id doesn't exist");
+        }
+
+        Devices[index] = updatedDevice;
+
+        return Results.Ok(updatedDevice);
+    }
+    
+    [HttpPut]
+    [Route("/devices/personal-computers/{id}")]
+    public IResult UpdatePersonalComputer(string id, [FromBody] PersonalComputer updatedDevice)
+    {
+        // check indexes
+        if (id != updatedDevice.Id)
+        {
+            return Results.BadRequest("Id's in passed device and in the URL must match");
+        }
+        
+        var index = Devices.FindIndex(d => d.Id == id);
+        if (index == -1)
+        {
+            return Results.NotFound("Device with this id doesn't exist");
+        }
+
+        Devices[index] = updatedDevice;
+
+        return Results.Ok(updatedDevice);
+    }
+    
+    [HttpPut]
+    [Route("/devices/embedded-devices/{id}")]
+    public IResult UpdateEmbeddedDevice(string id, [FromBody] EmbeddedDevice updatedDevice)
     {
         // check indexes
         if (id != updatedDevice.Id)
