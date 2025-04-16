@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManagerWithRest", "DeviceManagerWithRest\DeviceManagerWithRest.csproj", "{1214958D-29BA-46AD-9E9E-41101530D4F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devices", "Devices\Devices.csproj", "{8A6596DD-263A-4918-8DA6-97AA048934CA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2A2E9A1A-28E5-4476-8847-3AC7453824F8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{8BA5786F-3B29-4597-980D-4E655A91F8B9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1214958D-29BA-46AD-9E9E-41101530D4F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1214958D-29BA-46AD-9E9E-41101530D4F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1214958D-29BA-46AD-9E9E-41101530D4F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1214958D-29BA-46AD-9E9E-41101530D4F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A6596DD-263A-4918-8DA6-97AA048934CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A6596DD-263A-4918-8DA6-97AA048934CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A6596DD-263A-4918-8DA6-97AA048934CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A6596DD-263A-4918-8DA6-97AA048934CA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1214958D-29BA-46AD-9E9E-41101530D4F7} = {2A2E9A1A-28E5-4476-8847-3AC7453824F8}
+		{8A6596DD-263A-4918-8DA6-97AA048934CA} = {2A2E9A1A-28E5-4476-8847-3AC7453824F8}
+	EndGlobalSection
+EndGlobal
