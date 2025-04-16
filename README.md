@@ -1,1 +1,1 @@
-People often mistake me for ana adult because of my age
+People often mistake me for an adult because of my age
