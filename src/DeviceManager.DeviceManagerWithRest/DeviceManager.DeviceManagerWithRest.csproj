@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Devices.DeviceManager\Devices.DeviceManager.csproj" />
+      <ProjectReference Include="..\DeviceManager.Devices\DeviceManager.Devices.csproj" />
     </ItemGroup>
 
 </Project>
