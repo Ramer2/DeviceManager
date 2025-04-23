@@ -37,6 +37,8 @@ public class SmartWatch : Device, IPowerNotifier
         _batteryCharge = batteryCharge;
     }
     
+    public SmartWatch() : base("", "", false) { }
+    
     /// <summary>
     /// Turns the device on.
     /// </summary>

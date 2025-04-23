@@ -14,7 +14,7 @@ public class EmbeddedDevice : Device
     /// </summary>
     public string IpAddress { get; set; }
     
-    public string NetworkName { get; }
+    public string NetworkName { get; set;  }
 
     /// <summary>
     /// Indicator for whether the device is connected to a network.
@@ -36,6 +36,8 @@ public class EmbeddedDevice : Device
         IpAddress = ipAddress;
         IsConnected = false;
     }
+    
+    public EmbeddedDevice() : base("", "", false) { }
 
     /// <summary>
     /// Sets the IP address of the device.

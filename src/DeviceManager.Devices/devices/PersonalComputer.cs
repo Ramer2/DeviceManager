@@ -7,7 +7,7 @@ namespace Devices.devices;
 /// </summary>
 public class PersonalComputer : Device
 {
-    public string OperatingSystem { get; }
+    public string OperatingSystem { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the PersonalComputer class.
@@ -20,6 +20,8 @@ public class PersonalComputer : Device
     {
         OperatingSystem = operatingSystem;
     }
+    
+    public PersonalComputer() : base("", "", false) { }
 
     /// <summary>
     /// Turns on the computer, ensuring the operating system is set.
