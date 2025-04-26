@@ -5,7 +5,6 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DevicesDatabase");
 builder.Services.AddSingleton<IDeviceService, DeviceService>(deviceService => new DeviceService(connectionString));
 
-
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

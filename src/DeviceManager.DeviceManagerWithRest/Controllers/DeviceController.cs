@@ -1,4 +1,5 @@
-﻿using DeviceManager.Application;
+﻿using System.Text.Json.Nodes;
+using DeviceManager.Application;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceManagerWithRest.Controllers;
@@ -18,7 +19,9 @@ public class DeviceController : ControllerBase
     [Route("/api/devices")]
     public IResult GetAllDevices()
     {
-        return Results.Ok(_deviceService.GetAllDevices());
+        var devices = _deviceService.GetAllDevices();
+        if (devices == null) return Results.NotFound();
+        return Results.Ok(devices);
     }
     
     [HttpGet]
@@ -30,48 +33,51 @@ public class DeviceController : ControllerBase
         return Results.Json(device);
     }
     
-    // [HttpPost]
-    // [Route("/devices/smart-watches")]
-    // public IResult AddsSmartWatch([FromBody] SmartWatch smartWatch)
-    // {
-    //     // check already taken id
-    //     if (Devices.Any(d => d.Id == smartWatch.Id))
-    //     {
-    //         return Results.BadRequest("Device with this id already exists");
-    //     }
-    //     
-    //     Devices.Add(smartWatch);
-    //     return Results.Ok();
-    // }
-    //
-    // [HttpPost]
-    // [Route("/devices/personal-computers")]
-    // public IResult AddsPersonalComputer([FromBody] PersonalComputer personalComputer)
-    // {
-    //     // check already taken id
-    //     if (Devices.Any(d => d.Id == personalComputer.Id))
-    //     {
-    //         return Results.BadRequest("Device with this id already exists");
-    //     }
-    //     
-    //     Devices.Add(personalComputer);
-    //     return Results.Ok();
-    // }
-    //
-    // [HttpPost]
-    // [Route("/devices/embedded-devices")]
-    // public IResult AddsEmbeddedDevice([FromBody] EmbeddedDevice embeddedDevice)
-    // {
-    //     // check already taken id
-    //     if (Devices.Any(d => d.Id == embeddedDevice.Id))
-    //     {
-    //         return Results.BadRequest("Device with this id already exists");
-    //     }
-    //     
-    //     Devices.Add(embeddedDevice);
-    //     return Results.Ok();
-    // }
-    //
+    [HttpPost]
+    [Route("/api/devices")]
+    [Consumes("application/json", "text/plain")]
+    public async Task<IResult> AddDevice()
+    {
+        var contentType = Request.ContentType?.ToLower();
+
+        switch (contentType)
+        {
+            case "application/json":
+            {
+                using var reader = new StreamReader(Request.Body);
+                string rawJson = await reader.ReadToEndAsync();
+
+                var json = JsonNode.Parse(rawJson);
+                if (json == null)
+                    return Results.BadRequest("Invalid JSON format.");
+
+                try
+                {
+                    _deviceService.AddDeviceByJson(json);
+                }
+                catch (Exception e)
+                {
+                    return Results.BadRequest(e.Message);
+                }
+                return Results.Created();
+            }
+
+            case "text/plain":
+            {
+                using var reader = new StreamReader(Request.Body);
+                string rawText = await reader.ReadToEndAsync();
+
+                // HandlePlainText(rawText);
+                return Results.Ok("Plain text handled successfully.");
+            }
+
+            default:
+                return Results.Conflict("Unsupported Content-Type.");
+        }
+    }
+    
+    
+    
     // [HttpPut]
     // [Route("/devices/smart-watches/{id}")]
     // public IResult UpdateSmartWatch(string id, [FromBody] SmartWatch updatedDevice)

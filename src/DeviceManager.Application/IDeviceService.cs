@@ -1,5 +1,7 @@
-﻿using DeviceManager.Application.dtos;
+﻿using System.Text.Json.Nodes;
+using DeviceManager.Application.dtos;
 using Devices.devices;
+using Microsoft.AspNetCore.Http;
 
 namespace DeviceManager.Application;
 
@@ -9,7 +11,7 @@ public interface IDeviceService
     
     public Device GetDeviceById(string id);
 
-    public bool AddDevice(Device device);
+    public bool AddDeviceByJson(JsonNode? json);
     
     public bool UpdateSmartWatch(SmartWatch smartWatch);
     
