@@ -9,11 +9,7 @@ public interface IDeviceService
     
     public Device GetDeviceById(string id);
 
-    public bool AddSmartWatch(SmartWatch smartWatch);
-
-    public bool AddPersonalComputer(PersonalComputer personalComputer);
-    
-    public bool AddEmbeddedDevice(EmbeddedDevice embeddedDevice);
+    public bool AddDevice(Device device);
     
     public bool UpdateSmartWatch(SmartWatch smartWatch);
     

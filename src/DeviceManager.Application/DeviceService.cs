@@ -50,13 +50,13 @@ public class DeviceService : IDeviceService
 
     public Device GetDeviceById(string id)
     {
-        string query = "SELECT * FROM Device";
+        var query = "SELECT * FROM Device";
 
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             if (id.Contains("SW"))
             {
-                query += " JOIN SmartWatch ON Device.Id = SmartWatch.Device_id WHERE SmartWatch.Id = @id";
+                query += " JOIN SmartWatch ON Device.Id = SmartWatch.Device_id WHERE SmartWatch.Device_Id = @id";
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@id", id);
                 connection.Open();
@@ -64,14 +64,14 @@ public class DeviceService : IDeviceService
                 SqlDataReader reader = command.ExecuteReader();
                 try
                 {
-                    if (reader.HasRows)
+                    if (reader.Read())
                     {
                         return new SmartWatch
                         {
                             Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
-                            BatteryCharge = reader.GetByte(3)
+                            BatteryCharge = reader.GetInt32(4)
                         };
                     }
                 }
@@ -81,7 +81,7 @@ public class DeviceService : IDeviceService
                 }
             } else if (id.Contains("P"))
             {
-                query += " JOIN PersonalComputer ON Device.Id = PersonalComputer.Device_id WHERE PersonalComputer.Id = @id";
+                query += " JOIN PersonalComputer ON Device.Id = PersonalComputer.Device_id WHERE PersonalComputer.Device_Id = @id";
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@id", id);
                 connection.Open();
@@ -89,14 +89,14 @@ public class DeviceService : IDeviceService
                 SqlDataReader reader = command.ExecuteReader();
                 try
                 {
-                    if (reader.HasRows)
+                    if (reader.Read())
                     {
                         return new PersonalComputer
                         {
                             Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
-                            OperatingSystem = reader.GetString(3)
+                            OperatingSystem = reader.GetString(4)
                         };
                     }
                 }
@@ -106,7 +106,7 @@ public class DeviceService : IDeviceService
                 }
             } else if (id.Contains("ED"))
             {
-                query += " JOIN dbo.EmbeddedDevice ED on Device.Id = ED.Device_id WHERE Device.Id = @id";
+                query += " JOIN EmbeddedDevice on Device.Id = EmbeddedDevice.Device_id WHERE EmbeddedDevice.Device_id = @id";
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@id", id);
                 connection.Open();
@@ -114,15 +114,15 @@ public class DeviceService : IDeviceService
                 SqlDataReader reader = command.ExecuteReader();
                 try
                 {
-                    if (reader.HasRows)
+                    if (reader.Read())
                     {
                         return new EmbeddedDevice
                         {
                             Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
-                            IpAddress = reader.GetString(3),
-                            NetworkName = reader.GetString(4)
+                            IpAddress = reader.GetString(4),
+                            NetworkName = reader.GetString(5)
                         };
                     }
                 }
@@ -136,18 +136,7 @@ public class DeviceService : IDeviceService
         return null;
     }
 
-    public bool AddSmartWatch(SmartWatch smartWatch)
-    {
-        // const string query = "INSERT INTO SmartWatch VALUES (@id, @name, @isOn);";
-        throw new NotImplementedException();
-    }
-
-    public bool AddPersonalComputer(PersonalComputer personalComputer)
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool AddEmbeddedDevice(EmbeddedDevice embeddedDevice)
+    public bool AddDevice(Device device)
     {
         throw new NotImplementedException();
     }
