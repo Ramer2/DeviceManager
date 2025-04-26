@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using DeviceManager.Application.dtos;
 using Devices.devices;
-using Microsoft.AspNetCore.Http;
 
 namespace DeviceManager.Application;
 
@@ -13,11 +12,9 @@ public interface IDeviceService
 
     public bool AddDeviceByJson(JsonNode? json);
     
-    public bool UpdateSmartWatch(SmartWatch smartWatch);
+    public bool AddDeviceByRawText(string text);
     
-    public bool UpdatePersonalComputer(PersonalComputer personalComputer);
+    public bool UpdateDevice(Device device);
     
-    public bool UpdateEmbeddedDevice(EmbeddedDevice embeddedDevice);
-
     public bool DeleteDevice(string id);
 }

@@ -3,8 +3,6 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using DeviceManager.Application.dtos;
 using Devices.devices;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 
@@ -141,79 +139,7 @@ public class DeviceService : IDeviceService
 
         return null;
     }
-
-    // public bool AddDevice(Device device)
-    // {
-    //     var countDeviceRowsAdded = -1;
-    //     var countSpeficifDeviceRowsAdded = -1;
-    //     using (SqlConnection connection = new SqlConnection(_connectionString))
-    //     {
-    //         if (device.Id.Contains("SW"))
-    //         {
-    //             var smartWatch = (SmartWatch) device;
-    //             const string deviceQuery = "INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-    //             var smartWatchQuery = "INSERT INTO SmartWatch VALUES (@BatteryCharge, @Device_id)";
-    //             
-    //             SqlCommand deviceCommand = new SqlCommand(deviceQuery, connection);
-    //             deviceCommand.Parameters.AddWithValue("@Id", device.Id);
-    //             deviceCommand.Parameters.AddWithValue("@Name", device.Name);
-    //             deviceCommand.Parameters.AddWithValue("@IsOn", device.IsOn);
-    //             
-    //             SqlCommand smartWatchCommand = new SqlCommand(smartWatchQuery, connection);
-    //             smartWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
-    //             smartWatchCommand.Parameters.AddWithValue("@Device_id", device.Id);
-    //             
-    //             connection.Open();
-    //
-    //             countDeviceRowsAdded = deviceCommand.ExecuteNonQuery();
-    //             countSpeficifDeviceRowsAdded = smartWatchCommand.ExecuteNonQuery();
-    //         }
-    //         if (device.Id.Contains("P"))
-    //         {
-    //             var personalComputer = (PersonalComputer) device;
-    //             const string deviceQuery = "INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-    //             var smartWatchQuery = "INSERT INTO PersonalComputer VALUES (@OperatingSystem, @Device_id)";
-    //             
-    //             SqlCommand deviceCommand = new SqlCommand(deviceQuery, connection);
-    //             deviceCommand.Parameters.AddWithValue("@Id", device.Id);
-    //             deviceCommand.Parameters.AddWithValue("@Name", device.Name);
-    //             deviceCommand.Parameters.AddWithValue("@IsOn", device.IsOn);
-    //             
-    //             SqlCommand personalComputerCommand = new SqlCommand(smartWatchQuery, connection);
-    //             personalComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
-    //             personalComputerCommand.Parameters.AddWithValue("@Device_id", device.Id);
-    //             
-    //             connection.Open();
-    //
-    //             countDeviceRowsAdded = deviceCommand.ExecuteNonQuery();
-    //             countSpeficifDeviceRowsAdded = personalComputerCommand.ExecuteNonQuery();
-    //         }
-    //         if (device.Id.Contains("ED"))
-    //         {
-    //             var embeddedDevice = (EmbeddedDevice) device;
-    //             const string deviceQuery = "INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-    //             var smartWatchQuery = "INSERT INTO EmbeddedDevice VALUES (@IpAddress, @NetworkName, @IsConnected, @Device_id)";
-    //             
-    //             SqlCommand deviceCommand = new SqlCommand(deviceQuery, connection);
-    //             deviceCommand.Parameters.AddWithValue("@Id", device.Id);
-    //             deviceCommand.Parameters.AddWithValue("@Name", device.Name);
-    //             deviceCommand.Parameters.AddWithValue("@IsOn", device.IsOn);
-    //             
-    //             SqlCommand embeddedDeviceCommand = new SqlCommand(smartWatchQuery, connection);
-    //             embeddedDeviceCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
-    //             embeddedDeviceCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
-    //             embeddedDeviceCommand.Parameters.AddWithValue("@Device_id", device.Id);
-    //             embeddedDeviceCommand.Parameters.AddWithValue("@Device_id", device.Id);
-    //             
-    //             connection.Open();
-    //
-    //             countDeviceRowsAdded = deviceCommand.ExecuteNonQuery();
-    //             countSpeficifDeviceRowsAdded = embeddedDeviceCommand.ExecuteNonQuery();
-    //         }
-    //     }
-    //     return countDeviceRowsAdded != -1 && countSpeficifDeviceRowsAdded != -1;
-    // }
-
+    
     public bool AddDeviceByJson(JsonNode? json)
     {
         var deviceType = json["deviceType"]?.ToString();
@@ -222,23 +148,64 @@ public class DeviceService : IDeviceService
             throw new ArgumentException("Invalid JSON format. deviceType is not specified.");
         }
         
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        
         switch (deviceType.ToLower())
         {
             case "smartwatch":
             {
-                AddSmartWatch(json);
+                SmartWatch? smartWatch;
+                try
+                {
+                    smartWatch = JsonSerializer.Deserialize<SmartWatch>(json, options);
+                }
+                catch
+                {
+                    throw new ArgumentException("JSON deserialization failed. Seek help.");
+                }
+                if (smartWatch == null)
+                    throw new ArgumentException("JSON deserialization failed. Seek help.");
+                
+                AddSmartWatch(smartWatch);
                 break;
             }
             
             case "personalcomputer":
             {
-                AddPersonalComputer(json);
+                PersonalComputer? personalComputer;
+                try
+                {
+                    personalComputer = JsonSerializer.Deserialize<PersonalComputer>(json, options);
+                }
+                catch
+                {
+                    throw new ArgumentException("JSON deserialization failed. Seek help.");
+                }
+                if (personalComputer == null)
+                    throw new ArgumentException("JSON deserialization failed. Seek help.");
+                
+                AddPersonalComputer(personalComputer);
                 break;
             }
             
             case "embeddeddevice":
             {
-                AddEmbeddedDevice(json);
+                EmbeddedDevice? embeddedDevice;
+                try
+                {
+                    embeddedDevice = JsonSerializer.Deserialize<EmbeddedDevice>(json, options);
+                }
+                catch
+                {
+                    throw new ArgumentException("JSON deserialization failed. Seek help.");
+                }
+                if (embeddedDevice == null)
+                    throw new ArgumentException("JSON deserialization failed. Seek help.");
+                
+                AddEmbeddedDevice(embeddedDevice);
                 break;
             }
 
@@ -249,26 +216,8 @@ public class DeviceService : IDeviceService
         return false;
     }
     
-    private void AddSmartWatch(JsonNode? json)
+    private void AddSmartWatch(SmartWatch smartWatch)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        
-        SmartWatch? smartWatch;
-        try
-        {
-            smartWatch = JsonSerializer.Deserialize<SmartWatch>(json, options);
-        }
-        catch
-        {
-            throw new ArgumentException("JSON deserialization failed. Seek help.");
-        }
-        
-        if (smartWatch == null)
-            throw new ArgumentException("JSON deserialization failed. Seek help.");
-        
         // edgecases
         if (smartWatch.BatteryCharge is < 0 or > 100)
             throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
@@ -293,7 +242,12 @@ public class DeviceService : IDeviceService
             {
                 reader.Close();
             }
-            smartWatch.Id = $"SW-{count + 1}";
+            
+            // set the device id only if it was not set
+            if (smartWatch.Id.IsNullOrEmpty())
+            {
+                smartWatch.Id = $"SW-{count + 1}";
+            }
 
             var insertDeviceResult = -1;
             var insertWatchResult = -1;
@@ -320,26 +274,8 @@ public class DeviceService : IDeviceService
         }
     }
 
-    private void AddPersonalComputer(JsonNode? json)
+    private void AddPersonalComputer(PersonalComputer personalComputer)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        
-        PersonalComputer? personalComputer;
-        try
-        {
-            personalComputer = JsonSerializer.Deserialize<PersonalComputer>(json, options);
-        }
-        catch
-        {
-            throw new ArgumentException("JSON deserialization failed. Seek help.");
-        }
-        
-        if (personalComputer == null)
-            throw new ArgumentException("JSON deserialization failed. Seek help.");
-        
         // edgecases
         if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
             throw new ArgumentException("PC cannot be turned on without operating system.");
@@ -364,7 +300,12 @@ public class DeviceService : IDeviceService
             {
                 reader.Close();
             }
-            personalComputer.Id = $"P-{count + 1}";
+            
+            // set the device id only if it was not set
+            if (personalComputer.Id.IsNullOrEmpty())
+            {
+                personalComputer.Id = $"P-{count + 1}";
+            }
 
             var insertDeviceResult = -1;
             var insertComputerResult = -1;
@@ -382,7 +323,7 @@ public class DeviceService : IDeviceService
             
             SqlCommand insertComputerCommand = new SqlCommand(insertComputerQuery, connection);
             insertComputerCommand.Parameters.AddWithValue("@Id", count + 1);
-            insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
+            insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem ?? "");
             insertComputerCommand.Parameters.AddWithValue("@Device_id", personalComputer.Id);
             
             insertComputerResult = insertComputerCommand.ExecuteNonQuery();
@@ -391,26 +332,8 @@ public class DeviceService : IDeviceService
         }
     }
     
-    private void AddEmbeddedDevice(JsonNode? json)
+    private void AddEmbeddedDevice(EmbeddedDevice embeddedDevice)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        
-        EmbeddedDevice? embeddedDevice;
-        try
-        {
-            embeddedDevice = JsonSerializer.Deserialize<EmbeddedDevice>(json, options);
-        }
-        catch
-        {
-            throw new ArgumentException("JSON deserialization failed. Seek help.");
-        }
-        
-        if (embeddedDevice == null)
-            throw new ArgumentException("JSON deserialization failed. Seek help.");
-        
         // edge cases
         if (!Regex.IsMatch(embeddedDevice.IpAddress,
                 @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
@@ -448,7 +371,12 @@ public class DeviceService : IDeviceService
             {
                 reader.Close();
             }
-            embeddedDevice.Id = $"ED-{count + 1}";
+            
+            // set the device id only if it was not set
+            if (embeddedDevice.Id.IsNullOrEmpty())
+            {
+                embeddedDevice.Id = $"ED-{count + 1}";
+            }
 
             var insertDeviceResult = -1;
             var insertEmbeddedResult = -1;
@@ -477,17 +405,75 @@ public class DeviceService : IDeviceService
         }
     }
 
-    public bool UpdateSmartWatch(SmartWatch smartWatch)
+    public bool AddDeviceByRawText(string text)
     {
-        throw new NotImplementedException();
+        var parts = text.Split(',');
+        switch (parts[0].Split('-')[0])
+        {
+            case "SW":
+            {
+                SmartWatch smartWatch = new SmartWatch();
+                smartWatch.Id = parts[0];
+                smartWatch.Name = parts[1];
+                try
+                {
+                    smartWatch.IsOn = bool.Parse(parts[2]);
+                }
+                catch
+                {
+                    throw new ArgumentException("Invalid boolean value for IsOn parameter.");
+                }
+                try
+                {
+                    smartWatch.BatteryCharge = int.Parse(parts[3]);
+                }
+                catch
+                {
+                    throw new ArgumentException("Invalid int value for BatteryCharge parameter.");
+                }
+                AddSmartWatch(smartWatch);
+                break;
+            }
+            case "P":
+            {
+                PersonalComputer personalComputer = new PersonalComputer();
+                personalComputer.Id = parts[0];
+                personalComputer.Name = parts[1];
+                try
+                {
+                    personalComputer.IsOn = bool.Parse(parts[2]);
+                }
+                catch
+                {
+                    throw new ArgumentException("Invalid boolean value for IsOn parameter.");
+                }
+
+                if (parts.Length > 3)
+                {
+                    personalComputer.OperatingSystem = parts[3];
+                }
+                AddPersonalComputer(personalComputer);
+                break;
+            }
+            case "ED":
+            {
+                EmbeddedDevice embeddedDevice = new EmbeddedDevice();
+                embeddedDevice.Id = parts[0];
+                embeddedDevice.Name = parts[1];
+                embeddedDevice.IsOn = false;
+                embeddedDevice.IpAddress = parts[2];
+                embeddedDevice.NetworkName = parts[3];
+                embeddedDevice.IsConnected = false;
+                AddEmbeddedDevice(embeddedDevice);
+                break;
+            }
+            default: throw new ArgumentException("Unknown device.");
+        }
+
+        return true;
     }
 
-    public bool UpdatePersonalComputer(PersonalComputer personalComputer)
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool UpdateEmbeddedDevice(EmbeddedDevice embeddedDevice)
+    public bool UpdateDevice(Device device)
     {
         throw new NotImplementedException();
     }

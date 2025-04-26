@@ -65,18 +65,22 @@ public class DeviceController : ControllerBase
             case "text/plain":
             {
                 using var reader = new StreamReader(Request.Body);
-                string rawText = await reader.ReadToEndAsync();
+                var rawText = await reader.ReadToEndAsync();
 
-                // HandlePlainText(rawText);
-                return Results.Ok("Plain text handled successfully.");
+                try
+                {
+                    _deviceService.AddDeviceByRawText(rawText);
+                }
+                catch (Exception e)
+                {
+                    return Results.BadRequest(e.Message);
+                }
+                return Results.Created();
             }
-
             default:
                 return Results.Conflict("Unsupported Content-Type.");
         }
     }
-    
-    
     
     // [HttpPut]
     // [Route("/devices/smart-watches/{id}")]
