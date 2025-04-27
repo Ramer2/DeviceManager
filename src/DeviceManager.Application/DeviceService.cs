@@ -269,7 +269,7 @@ public class DeviceService : IDeviceService
             SqlCommand insertWatchCommand = new SqlCommand(insertWatchQuery, connection);
             insertWatchCommand.Parameters.AddWithValue("@Id", count + 1);
             insertWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
-            insertWatchCommand.Parameters.AddWithValue("@Device_id", smartWatch.Id);
+            insertWatchCommand.Parameters.AddWithValue("@Device_id", smartWatch.Device_Id);
             
             insertWatchResult = insertWatchCommand.ExecuteNonQuery();
             if (insertWatchResult == -1)
@@ -327,7 +327,7 @@ public class DeviceService : IDeviceService
             SqlCommand insertComputerCommand = new SqlCommand(insertComputerQuery, connection);
             insertComputerCommand.Parameters.AddWithValue("@Id", count + 1);
             insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
-            insertComputerCommand.Parameters.AddWithValue("@Device_id", personalComputer.Id);
+            insertComputerCommand.Parameters.AddWithValue("@Device_id", personalComputer.Device_Id);
             
             insertComputerResult = insertComputerCommand.ExecuteNonQuery();
             if (insertComputerResult == -1)
@@ -400,7 +400,7 @@ public class DeviceService : IDeviceService
             insertEmbeddedCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
             insertEmbeddedCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
             insertEmbeddedCommand.Parameters.AddWithValue("@IsCOnnected", embeddedDevice.IsConnected);
-            insertEmbeddedCommand.Parameters.AddWithValue("@Device_id", embeddedDevice.Id);
+            insertEmbeddedCommand.Parameters.AddWithValue("@Device_id", embeddedDevice.Device_Id);
             
             insertEmbeddedResult = insertEmbeddedCommand.ExecuteNonQuery();
             if (insertEmbeddedResult == -1)
