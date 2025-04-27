@@ -578,11 +578,58 @@ public class DeviceService : IDeviceService
     
     private void UpdatePersonalComputer(PersonalComputer personalComputer)
     {
-        throw new NotImplementedException();
+        // edgecases
+        if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
+            throw new ArgumentException("PC cannot be turned on without operating system.");
+        
+        // updating the whole object
+        using (SqlConnection connection = new SqlConnection(_connectionString))
+        {
+            var updateDeviceResult = -1;
+            var updateWatchResult = -1;
+
+            var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
+            var updateWatchQuery = "UPDATE PersonalComputer SET OperatingSystem = @OperatingSystem WHERE Device_id = @Id";
+
+            connection.Open();
+            
+            SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
+            updateDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Id);
+            updateDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
+            updateDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
+            
+            updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
+            if (updateDeviceResult == -1)
+                throw new ApplicationException("Updating device failed.");
+
+            SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
+            updateWatchCommand.Parameters.AddWithValue("@Id", personalComputer.Id);
+            updateWatchCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
+
+            updateWatchResult = updateWatchCommand.ExecuteNonQuery();
+            if (updateWatchResult == -1)
+                throw new ApplicationException("Updating device failed.");
+        }
     }
     
     private void UpdateEmbeddedDevice(EmbeddedDevice embeddedDevice)
     {
+        if (!Regex.IsMatch(embeddedDevice.IpAddress,
+                @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
+        {
+            throw new ArgumentException("IP address is not a valid IP address.");
+        }
+
+        if (!embeddedDevice.IsOn && embeddedDevice.IsConnected)
+        {
+            throw new ArgumentException("Device cannot be connected if it is turned off.");
+        }
+
+        if (embeddedDevice.IsOn && !embeddedDevice.NetworkName.Contains("MD Ltd."))
+        {
+            throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
+        }
+        
         throw new NotImplementedException();
     }
 
