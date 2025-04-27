@@ -9,6 +9,8 @@ namespace Devices.devices;
 /// </summary>
 public class EmbeddedDevice : Device
 {
+    
+    public int Id { get; set; }
     /// <summary>
     /// IP address of the embedded device.
     /// </summary>
@@ -20,21 +22,26 @@ public class EmbeddedDevice : Device
     /// Indicator for whether the device is connected to a network.
     /// </summary>
     public bool IsConnected { get; set; }
+    
+    public string Device_Id { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the EmbeddedDevice class.
     /// </summary>
-    /// <param name="id">The unique device ID.</param>
+    /// <param name="id">The unique embedded device ID.</param>
     /// <param name="name">The name of the device.</param>
     /// <param name="isOn">Indicates whether the device is initially turned on.</param>
     /// <param name="ipAddress">The IP address of the device.</param>
     /// <param name="networkName">The network name.</param>
-    public EmbeddedDevice(string id, string name, bool isOn, string ipAddress, string networkName) : base(id, name, isOn)
+    /// <param name="deviceId">The unique device ID.</param>
+    public EmbeddedDevice(int id, string name, bool isOn, string ipAddress, string networkName, string deviceId) : base(deviceId, name, isOn)
     {
         SetIpAddress(ipAddress);
         NetworkName = networkName;
         IpAddress = ipAddress;
         IsConnected = false;
+        Id = id;
+        Device_Id = deviceId;
     }
     
     public EmbeddedDevice() : base("", "", false) { }

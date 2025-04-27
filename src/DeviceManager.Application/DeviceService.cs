@@ -72,9 +72,10 @@ public class DeviceService : IDeviceService
                     {
                         return new SmartWatch
                         {
-                            Id = reader.GetString(0),
+                            Device_Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
+                            Id = reader.GetInt32(3),
                             BatteryCharge = reader.GetInt32(4)
                         };
                     }
@@ -97,9 +98,10 @@ public class DeviceService : IDeviceService
                     {
                         return new PersonalComputer
                         {
-                            Id = reader.GetString(0),
+                            Device_Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
+                            Id = reader.GetInt32(3),
                             OperatingSystem = reader.GetString(4)
                         };
                     }
@@ -122,9 +124,10 @@ public class DeviceService : IDeviceService
                     {
                         return new EmbeddedDevice
                         {
-                            Id = reader.GetString(0),
+                            Device_Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
+                            Id = reader.GetInt32(3),
                             IpAddress = reader.GetString(4),
                             NetworkName = reader.GetString(5)
                         };
@@ -244,9 +247,9 @@ public class DeviceService : IDeviceService
             }
             
             // set the device id only if it was not set
-            if (smartWatch.Id.IsNullOrEmpty())
+            if (smartWatch.Device_Id.IsNullOrEmpty())
             {
-                smartWatch.Id = $"SW-{count + 1}";
+                smartWatch.Device_Id = $"SW-{count + 1}";
             }
 
             var insertDeviceResult = -1;
@@ -255,7 +258,7 @@ public class DeviceService : IDeviceService
             var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
             var insertWatchQuery = $"INSERT INTO SmartWatch VALUES (@Id, @BatteryCharge, @Device_id)";
             SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection);
-            insertDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Id);
+            insertDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
             insertDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
             insertDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
             
@@ -302,9 +305,9 @@ public class DeviceService : IDeviceService
             }
             
             // set the device id only if it was not set
-            if (personalComputer.Id.IsNullOrEmpty())
+            if (personalComputer.Device_Id.IsNullOrEmpty())
             {
-                personalComputer.Id = $"P-{count + 1}";
+                personalComputer.Device_Id = $"P-{count + 1}";
             }
 
             var insertDeviceResult = -1;
@@ -313,7 +316,7 @@ public class DeviceService : IDeviceService
             var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
             var insertComputerQuery = $"INSERT INTO PersonalComputer VALUES (@Id, @OperatingSystem, @Device_id)";
             SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection);
-            insertDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Id);
+            insertDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
             insertDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
             insertDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
             
@@ -373,9 +376,9 @@ public class DeviceService : IDeviceService
             }
             
             // set the device id only if it was not set
-            if (embeddedDevice.Id.IsNullOrEmpty())
+            if (embeddedDevice.Device_Id.IsNullOrEmpty())
             {
-                embeddedDevice.Id = $"ED-{count + 1}";
+                embeddedDevice.Device_Id = $"ED-{count + 1}";
             }
 
             var insertDeviceResult = -1;
@@ -384,7 +387,7 @@ public class DeviceService : IDeviceService
             var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
             var insertEmbeddedQuery = $"INSERT INTO EmbeddedDevice VALUES (@Id, @IpAddress, @NetworkName, @IsConnected, @Device_id)";
             SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection);
-            insertDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Id);
+            insertDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
             insertDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
             insertDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
             
@@ -413,7 +416,7 @@ public class DeviceService : IDeviceService
             case "SW":
             {
                 SmartWatch smartWatch = new SmartWatch();
-                smartWatch.Id = parts[0];
+                smartWatch.Device_Id = parts[0];
                 smartWatch.Name = parts[1];
                 try
                 {
@@ -437,7 +440,7 @@ public class DeviceService : IDeviceService
             case "P":
             {
                 PersonalComputer personalComputer = new PersonalComputer();
-                personalComputer.Id = parts[0];
+                personalComputer.Device_Id = parts[0];
                 personalComputer.Name = parts[1];
                 try
                 {
@@ -462,7 +465,7 @@ public class DeviceService : IDeviceService
             case "ED":
             {
                 EmbeddedDevice embeddedDevice = new EmbeddedDevice();
-                embeddedDevice.Id = parts[0];
+                embeddedDevice.Device_Id = parts[0];
                 embeddedDevice.Name = parts[1];
                 embeddedDevice.IsOn = false;
                 embeddedDevice.IpAddress = parts[2];
@@ -479,7 +482,7 @@ public class DeviceService : IDeviceService
 
     public bool UpdateDevice(JsonNode? json)
     {
-        var id = json["id"]?.ToString();
+        var id = json["device_id"]?.ToString();
         if (id.IsNullOrEmpty())
             throw new ArgumentException("Invalid or not specified id.");
         
@@ -569,7 +572,7 @@ public class DeviceService : IDeviceService
             connection.Open();
             
             SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
-            updateDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Id);
+            updateDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
             updateDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
             updateDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
             
@@ -578,7 +581,7 @@ public class DeviceService : IDeviceService
                 throw new ApplicationException("Updating device failed.");
 
             SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
-            updateWatchCommand.Parameters.AddWithValue("@Id", smartWatch.Id);
+            updateWatchCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
             updateWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
 
             updateWatchResult = updateWatchCommand.ExecuteNonQuery();
@@ -605,7 +608,7 @@ public class DeviceService : IDeviceService
             connection.Open();
             
             SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
-            updateDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Id);
+            updateDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
             updateDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
             updateDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
             
@@ -614,7 +617,7 @@ public class DeviceService : IDeviceService
                 throw new ApplicationException("Updating device failed.");
 
             SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
-            updateWatchCommand.Parameters.AddWithValue("@Id", personalComputer.Id);
+            updateWatchCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
             updateWatchCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
 
             updateWatchResult = updateWatchCommand.ExecuteNonQuery();
@@ -653,7 +656,7 @@ public class DeviceService : IDeviceService
             connection.Open();
             
             SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
-            updateDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Id);
+            updateDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
             updateDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
             updateDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
             
@@ -662,7 +665,7 @@ public class DeviceService : IDeviceService
                 throw new ApplicationException("Updating device failed.");
 
             SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
-            updateWatchCommand.Parameters.AddWithValue("@Id", embeddedDevice.Id);
+            updateWatchCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
             updateWatchCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
             updateWatchCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
             updateWatchCommand.Parameters.AddWithValue("@IsConnected", embeddedDevice.IsConnected);

@@ -7,6 +7,7 @@ namespace Devices.devices;
 /// </summary>
 public class SmartWatch : Device, IPowerNotifier
 {
+    public int Id { get; set; }
     
     private int _batteryCharge;
 
@@ -25,6 +26,8 @@ public class SmartWatch : Device, IPowerNotifier
         }
     }
     
+    public string Device_Id { get; set; }
+    
     /// <summary>
     /// Initializes a new instance of the SmartWatch class.
     /// </summary>
@@ -32,9 +35,11 @@ public class SmartWatch : Device, IPowerNotifier
     /// <param name="name">The name of the device.</param>
     /// <param name="isOn">Indicates whether the device is initially turned on.</param>
     /// <param name="batteryCharge">The initial battery charge level.</param>
-    public SmartWatch(string id, string name, bool isOn, int batteryCharge) : base(id, name, isOn)
+    public SmartWatch(int id, string name, bool isOn, int batteryCharge, string deviceId) : base(deviceId, name, isOn)
     {
+        Id = id;
         _batteryCharge = batteryCharge;
+        Device_Id = deviceId;
     }
     
     public SmartWatch() : base("", "", false) { }
