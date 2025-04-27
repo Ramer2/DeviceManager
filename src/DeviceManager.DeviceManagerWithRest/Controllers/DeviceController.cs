@@ -103,6 +103,10 @@ public class DeviceController : ControllerBase
                 {
                     _deviceService.UpdateDevice(json);
                 }
+                catch (FileNotFoundException e)
+                {
+                    return Results.NotFound(e.Message);
+                }
                 catch (Exception e)
                 {
                     return Results.BadRequest(e.Message);
@@ -114,17 +118,22 @@ public class DeviceController : ControllerBase
         }
     }
     
-    // [HttpDelete]
-    // [Route("/devices/{id}")]
-    // public IResult DeleteDevice(string id)
-    // {
-    //     var device = Devices.FirstOrDefault(d => d.Id == id);
-    //     if (device != null) Devices.Remove(device);
-    //     else
-    //     {
-    //         return Results.NotFound("Device with this id doesn't exist");
-    //     }
-    //     
-    //     return Results.Ok(device);
-    // }
+    [HttpDelete]
+    [Route("/api/devices/{id}")]
+    public IResult DeleteDeviceById(string id)
+    {
+        try
+        {
+            _deviceService.DeleteDevice(id);
+        }
+        catch (FileNotFoundException e)
+        {
+            return Results.NotFound(e.Message);
+        }
+        catch (Exception e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+        return Results.Ok();
+    }
 }

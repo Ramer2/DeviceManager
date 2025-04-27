@@ -210,7 +210,7 @@ public class DeviceService : IDeviceService
             }
 
             default:
-                throw new ArgumentException("Uknown device type.");
+                throw new ApplicationException("Uknown device type.");
         }
         
         return false;
@@ -480,11 +480,18 @@ public class DeviceService : IDeviceService
     public bool UpdateDevice(JsonNode? json)
     {
         var id = json["id"]?.ToString();
+        if (id.IsNullOrEmpty())
+            throw new ArgumentException("Invalid or not specified id.");
         
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
+
+        if (GetDeviceById(id) == null)
+        {
+            throw new FileNotFoundException("Device not found.");
+        }
 
         if (id.Contains("SW"))
         {
@@ -538,7 +545,7 @@ public class DeviceService : IDeviceService
         }
         else
         {
-            throw new ArgumentException("Uknown device type.");
+            throw new ApplicationException("Uknown device type.");
         }
 
         return true;
@@ -668,6 +675,97 @@ public class DeviceService : IDeviceService
 
     public bool DeleteDevice(string id)
     {
-        throw new NotImplementedException();
+        if (GetDeviceById(id) == null)
+        {
+            throw new FileNotFoundException("Device not found.");
+        }
+        
+        if (id.Contains("SW")) DeleteWatch(id);
+        else if (id.Contains("P")) DeleteComputer(id);
+        else if (id.Contains("ED")) DeleteEmbeddedDevice(id);
+        else throw new ApplicationException("Unknown device type.");
+
+        return true;
+    }
+
+    private void DeleteWatch(string id)
+    {
+        using (SqlConnection connection = new SqlConnection(_connectionString))
+        {
+            var deleteWatchResult = -1;
+            var deleteDeviceResult = -1;
+
+            var deleteWatchQuery = "DELETE FROM SmartWatch WHERE Device_Id = @Device_Id";
+            var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
+
+            connection.Open();
+            SqlCommand deleteWatchCommand = new SqlCommand(deleteWatchQuery, connection);
+            deleteWatchCommand.Parameters.AddWithValue("@Device_Id", id);
+            deleteWatchResult = deleteWatchCommand.ExecuteNonQuery();
+
+            if (deleteWatchResult == -1)
+                throw new ApplicationException("Deleting the device failed.");
+                
+            SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
+            deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
+            deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
+                
+            if (deleteDeviceResult == -1)
+                throw new ApplicationException("Deleting the device failed.");
+        }
+    }
+    
+    private void DeleteComputer(string id)
+    {
+        using (SqlConnection connection = new SqlConnection(_connectionString))
+        {
+            var deleteComputerResult = -1;
+            var deleteDeviceResult = -1;
+
+            var deleteComputerQuery = "DELETE FROM PersonalComputer WHERE Device_Id = @Device_Id";
+            var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
+
+            connection.Open();
+            SqlCommand deleteComputerCommand = new SqlCommand(deleteComputerQuery, connection);
+            deleteComputerCommand.Parameters.AddWithValue("@Device_Id", id);
+            deleteComputerResult = deleteComputerCommand.ExecuteNonQuery();
+
+            if (deleteComputerResult == -1)
+                throw new ApplicationException("Deleting the device failed.");
+                
+            SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
+            deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
+            deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
+                
+            if (deleteDeviceResult == -1)
+                throw new ApplicationException("Deleting the device failed.");
+        }
+    }
+    
+    private void DeleteEmbeddedDevice(string id)
+    {
+        using (SqlConnection connection = new SqlConnection(_connectionString))
+        {
+            var deleteEmbeddedResult = -1;
+            var deleteDeviceResult = -1;
+
+            var deleteEmbeddedQuery = "DELETE FROM EmbeddedDevice WHERE Device_Id = @Device_Id";
+            var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
+
+            connection.Open();
+            SqlCommand deleteEmbeddedCommand = new SqlCommand(deleteEmbeddedQuery, connection);
+            deleteEmbeddedCommand.Parameters.AddWithValue("@Device_Id", id);
+            deleteEmbeddedResult = deleteEmbeddedCommand.ExecuteNonQuery();
+
+            if (deleteEmbeddedResult == -1)
+                throw new ApplicationException("Deleting the device failed.");
+                
+            SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
+            deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
+            deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
+                
+            if (deleteDeviceResult == -1)
+                throw new ApplicationException("Deleting the device failed.");
+        }
     }
 }
