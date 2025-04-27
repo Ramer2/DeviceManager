@@ -1,4 +1,6 @@
-﻿POST requests:
+﻿**OUTDATED**
+
+POST requests:
 https://localhost:7164/devices/smart-watches
 {
     "id": "SW-2",
