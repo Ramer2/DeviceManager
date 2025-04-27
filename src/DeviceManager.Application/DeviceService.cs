@@ -625,12 +625,41 @@ public class DeviceService : IDeviceService
             throw new ArgumentException("Device cannot be connected if it is turned off.");
         }
 
-        if (embeddedDevice.IsOn && !embeddedDevice.NetworkName.Contains("MD Ltd."))
+        if (embeddedDevice.IsConnected && !embeddedDevice.NetworkName.Contains("MD Ltd."))
         {
             throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
         }
         
-        throw new NotImplementedException();
+        // updating the whole object
+        using (SqlConnection connection = new SqlConnection(_connectionString))
+        {
+            var updateDeviceResult = -1;
+            var updateWatchResult = -1;
+
+            var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
+            var updateWatchQuery = "UPDATE EmbeddedDevice SET IpAddress = @IpAddress, NetworkName = @NetworkName, IsConnected = @IsConnected WHERE Device_id = @Id";
+
+            connection.Open();
+            
+            SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
+            updateDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Id);
+            updateDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
+            updateDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
+            
+            updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
+            if (updateDeviceResult == -1)
+                throw new ApplicationException("Updating device failed.");
+
+            SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
+            updateWatchCommand.Parameters.AddWithValue("@Id", embeddedDevice.Id);
+            updateWatchCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
+            updateWatchCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
+            updateWatchCommand.Parameters.AddWithValue("@IsConnected", embeddedDevice.IsConnected);
+
+            updateWatchResult = updateWatchCommand.ExecuteNonQuery();
+            if (updateWatchResult == -1)
+                throw new ApplicationException("Updating device failed.");
+        }
     }
 
     public bool DeleteDevice(string id)
