@@ -225,7 +225,7 @@ public class DeviceService : IDeviceService
         // adding id and inserting into the db
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
-            var countSwQuery = "SELECT COUNT(*) FROM SmartWatch";
+            var countSwQuery = "SELECT MAX(id) FROM SmartWatch";
             var count = -1;
             
             SqlCommand countCommand = new SqlCommand(countSwQuery, connection);
@@ -283,7 +283,7 @@ public class DeviceService : IDeviceService
         // adding id and inserting into the db
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
-            var countPcQuery = "SELECT COUNT(*) FROM PersonalComputer";
+            var countPcQuery = "SELECT MAX(id) FROM PersonalComputer";
             var count = -1;
             
             SqlCommand countCommand = new SqlCommand(countPcQuery, connection);
@@ -323,7 +323,7 @@ public class DeviceService : IDeviceService
             
             SqlCommand insertComputerCommand = new SqlCommand(insertComputerQuery, connection);
             insertComputerCommand.Parameters.AddWithValue("@Id", count + 1);
-            insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem ?? "");
+            insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
             insertComputerCommand.Parameters.AddWithValue("@Device_id", personalComputer.Id);
             
             insertComputerResult = insertComputerCommand.ExecuteNonQuery();
@@ -354,7 +354,7 @@ public class DeviceService : IDeviceService
         // adding id and inserting into the db
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
-            var countEdQuery = "SELECT COUNT(*) FROM EmbeddedDevice";
+            var countEdQuery = "SELECT MAX(id) FROM EmbeddedDevice";
             var count = -1;
             
             SqlCommand countCommand = new SqlCommand(countEdQuery, connection);
@@ -425,7 +425,7 @@ public class DeviceService : IDeviceService
                 }
                 try
                 {
-                    smartWatch.BatteryCharge = int.Parse(parts[3]);
+                    smartWatch.BatteryCharge = int.Parse(parts[3].Replace("%", ""));
                 }
                 catch
                 {
@@ -451,6 +451,10 @@ public class DeviceService : IDeviceService
                 if (parts.Length > 3)
                 {
                     personalComputer.OperatingSystem = parts[3];
+                }
+                else
+                {
+                    personalComputer.OperatingSystem = "";
                 }
                 AddPersonalComputer(personalComputer);
                 break;
