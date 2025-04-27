@@ -473,7 +473,115 @@ public class DeviceService : IDeviceService
         return true;
     }
 
-    public bool UpdateDevice(Device device)
+    public bool UpdateDevice(JsonNode? json)
+    {
+        var id = json["id"]?.ToString();
+        
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        if (id.Contains("SW"))
+        {
+            SmartWatch? smartWatch;
+            try
+            {
+                smartWatch = JsonSerializer.Deserialize<SmartWatch>(json, options);
+            }
+            catch
+            {
+                throw new ArgumentException("JSON serialization failed. Seek help.");
+            }
+            
+            if (smartWatch == null)
+                throw new ArgumentException("JSON serialization failed. Seek help.");
+            
+            UpdateSmartWatch(smartWatch);
+        } else if (id.Contains("P"))
+        {
+            PersonalComputer? personalComputer;
+            try
+            {
+                personalComputer = JsonSerializer.Deserialize<PersonalComputer>(json, options);
+            }
+            catch
+            {
+                throw new ArgumentException("JSON serialization failed. Seek help.");
+            }
+            
+            if (personalComputer == null)
+                throw new ArgumentException("JSON serialization failed. Seek help.");
+            
+            UpdatePersonalComputer(personalComputer);
+        }
+        else if (id.Contains("ED"))
+        {
+            EmbeddedDevice? embeddedDevice;
+            try
+            {
+                embeddedDevice = JsonSerializer.Deserialize<EmbeddedDevice>(json, options);
+            }
+            catch
+            {
+                throw new ArgumentException("JSON serialization failed. Seek help.");
+            }
+            
+            if (embeddedDevice == null)
+                throw new ArgumentException("JSON serialization failed. Seek help.");
+            
+            UpdateEmbeddedDevice(embeddedDevice);
+        }
+        else
+        {
+            throw new ArgumentException("Uknown device type.");
+        }
+
+        return true;
+    }
+
+    private void UpdateSmartWatch(SmartWatch smartWatch)
+    {
+        // edgecases
+        if (smartWatch.BatteryCharge is < 0 or > 100)
+            throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
+        
+        // updating the whole object
+        using (SqlConnection connection = new SqlConnection(_connectionString))
+        {
+            var updateDeviceResult = -1;
+            var updateWatchResult = -1;
+
+            var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
+            var updateWatchQuery = "UPDATE SmartWatch SET BatteryCharge = @BatteryCharge WHERE Device_id = @Id";
+
+            connection.Open();
+            
+            SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
+            updateDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Id);
+            updateDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
+            updateDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
+            
+            updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
+            if (updateDeviceResult == -1)
+                throw new ApplicationException("Updating device failed.");
+
+            SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
+            updateWatchCommand.Parameters.AddWithValue("@Id", smartWatch.Id);
+            updateWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
+
+            updateWatchResult = updateWatchCommand.ExecuteNonQuery();
+            if (updateWatchResult == -1)
+                throw new ApplicationException("Updating device failed.");
+        }
+    }
+    
+    private void UpdatePersonalComputer(PersonalComputer personalComputer)
+    {
+        throw new NotImplementedException();
+    }
+    
+    private void UpdateEmbeddedDevice(EmbeddedDevice embeddedDevice)
     {
         throw new NotImplementedException();
     }

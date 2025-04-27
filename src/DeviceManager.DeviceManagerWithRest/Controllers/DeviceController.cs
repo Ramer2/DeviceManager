@@ -82,69 +82,38 @@ public class DeviceController : ControllerBase
         }
     }
     
-    // [HttpPut]
-    // [Route("/devices/smart-watches/{id}")]
-    // public IResult UpdateSmartWatch(string id, [FromBody] SmartWatch updatedDevice)
-    // {
-    //     // check indexes
-    //     if (id != updatedDevice.Id)
-    //     {
-    //         return Results.BadRequest("Id's in passed device and in the URL must match");
-    //     }
-    //     
-    //     var index = Devices.FindIndex(d => d.Id == id);
-    //     if (index == -1)
-    //     {
-    //         return Results.NotFound("Device with this id doesn't exist");
-    //     }
-    //
-    //     Devices[index] = updatedDevice;
-    //
-    //     return Results.Ok(updatedDevice);
-    // }
-    //
-    // [HttpPut]
-    // [Route("/devices/personal-computers/{id}")]
-    // public IResult UpdatePersonalComputer(string id, [FromBody] PersonalComputer updatedDevice)
-    // {
-    //     // check indexes
-    //     if (id != updatedDevice.Id)
-    //     {
-    //         return Results.BadRequest("Id's in passed device and in the URL must match");
-    //     }
-    //     
-    //     var index = Devices.FindIndex(d => d.Id == id);
-    //     if (index == -1)
-    //     {
-    //         return Results.NotFound("Device with this id doesn't exist");
-    //     }
-    //
-    //     Devices[index] = updatedDevice;
-    //
-    //     return Results.Ok(updatedDevice);
-    // }
-    //
-    // [HttpPut]
-    // [Route("/devices/embedded-devices/{id}")]
-    // public IResult UpdateEmbeddedDevice(string id, [FromBody] EmbeddedDevice updatedDevice)
-    // {
-    //     // check indexes
-    //     if (id != updatedDevice.Id)
-    //     {
-    //         return Results.BadRequest("Id's in passed device and in the URL must match");
-    //     }
-    //     
-    //     var index = Devices.FindIndex(d => d.Id == id);
-    //     if (index == -1)
-    //     {
-    //         return Results.NotFound("Device with this id doesn't exist");
-    //     }
-    //
-    //     Devices[index] = updatedDevice;
-    //
-    //     return Results.Ok(updatedDevice);
-    // }
-    //
+    [HttpPut]
+    [Route("/api/devices")]
+    public async Task<IResult> UpdateDevice()
+    {
+        var contentType = Request.ContentType?.ToLower();
+
+        switch (contentType)
+        {
+            case "application/json":
+            {
+                using var reader = new StreamReader(Request.Body);
+                string rawJson = await reader.ReadToEndAsync();
+
+                var json = JsonNode.Parse(rawJson);
+                if (json == null)
+                    return Results.BadRequest("Invalid JSON format.");
+
+                try
+                {
+                    _deviceService.UpdateDevice(json);
+                }
+                catch (Exception e)
+                {
+                    return Results.BadRequest(e.Message);
+                }
+                return Results.Ok();
+            }
+            default:
+                return Results.Conflict("Unsupported Content-Type.");
+        }
+    }
+    
     // [HttpDelete]
     // [Route("/devices/{id}")]
     // public IResult DeleteDevice(string id)

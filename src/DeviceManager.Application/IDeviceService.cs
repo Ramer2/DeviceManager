@@ -14,7 +14,7 @@ public interface IDeviceService
     
     public bool AddDeviceByRawText(string text);
     
-    public bool UpdateDevice(Device device);
+    public bool UpdateDevice(JsonNode? json);
     
     public bool DeleteDevice(string id);
 }
