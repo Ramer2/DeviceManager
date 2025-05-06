@@ -1,9 +1,10 @@
 using DeviceManager.Application;
+using DeviceManager.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DevicesDatabase");
-builder.Services.AddSingleton<IDeviceService, DeviceService>(deviceService => new DeviceService(connectionString));
+builder.Services.AddSingleton<IDeviceService, DeviceService>(deviceService => new DeviceService(new DatabaseRepository(connectionString)));
 
 // Add services to the container.
 builder.Services.AddControllers();

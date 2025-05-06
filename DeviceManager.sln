@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Devices", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Application", "src\DeviceManager.Application\DeviceManager.Application.csproj", "{B1F680AD-7621-488D-BEDD-A461EB78FD3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Repository", "src\DeviceManager.Repository\DeviceManager.Repository.csproj", "{4754A7CF-78EB-4F6F-980C-3A1D3868153D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{B1F680AD-7621-488D-BEDD-A461EB78FD3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1F680AD-7621-488D-BEDD-A461EB78FD3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1F680AD-7621-488D-BEDD-A461EB78FD3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4754A7CF-78EB-4F6F-980C-3A1D3868153D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4754A7CF-78EB-4F6F-980C-3A1D3868153D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4754A7CF-78EB-4F6F-980C-3A1D3868153D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4754A7CF-78EB-4F6F-980C-3A1D3868153D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

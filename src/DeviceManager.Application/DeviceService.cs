@@ -2,145 +2,29 @@
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using DeviceManager.Application.dtos;
+using DeviceManager.Repository;
 using Devices.devices;
-using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DeviceManager.Application;
 
 public class DeviceService : IDeviceService
 {
-    private string _connectionString;
+    private IDatabaseRepository _databaseRepository;
 
-    public DeviceService(string connectionString)
+    public DeviceService(IDatabaseRepository databaseRepository)
     {
-        _connectionString = connectionString;
+        _databaseRepository = databaseRepository;
     }
     
     public IEnumerable<DeviceDTO> GetAllDevices()
     {
-        List<DeviceDTO> devices = [];
-        const string query = "SELECT * FROM Device";
-
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            SqlCommand command = new SqlCommand(query, connection);
-            
-            connection.Open();
-            SqlDataReader reader = command.ExecuteReader();
-            try
-            {
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        var deviceRow = new DeviceDTO
-                        {
-                            Id = reader.GetString(0),
-                            Name = reader.GetString(1),
-                            IsOn = reader.GetBoolean(2)
-                        };
-                        devices.Add(deviceRow);
-                    }
-                }
-            }
-            finally
-            {
-                reader.Close();
-            }
-            return devices;
-        }
+        return _databaseRepository.GetAllDevices();
     }
 
     public Device GetDeviceById(string id)
     {
-        var query = "SELECT * FROM Device";
-
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            if (id.Contains("SW"))
-            {
-                query += " JOIN SmartWatch ON Device.Id = SmartWatch.Device_id WHERE SmartWatch.Device_Id = @id";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", id);
-                connection.Open();
-                
-                SqlDataReader reader = command.ExecuteReader();
-                try
-                {
-                    if (reader.Read())
-                    {
-                        return new SmartWatch
-                        {
-                            Device_Id = reader.GetString(0),
-                            Name = reader.GetString(1),
-                            IsOn = reader.GetBoolean(2),
-                            Id = reader.GetInt32(3),
-                            BatteryCharge = reader.GetInt32(4)
-                        };
-                    }
-                }
-                finally
-                {
-                    reader.Close();
-                }
-            } else if (id.Contains("P"))
-            {
-                query += " JOIN PersonalComputer ON Device.Id = PersonalComputer.Device_id WHERE PersonalComputer.Device_Id = @id";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", id);
-                connection.Open();
-                
-                SqlDataReader reader = command.ExecuteReader();
-                try
-                {
-                    if (reader.Read())
-                    {
-                        return new PersonalComputer
-                        {
-                            Device_Id = reader.GetString(0),
-                            Name = reader.GetString(1),
-                            IsOn = reader.GetBoolean(2),
-                            Id = reader.GetInt32(3),
-                            OperatingSystem = reader.GetString(4)
-                        };
-                    }
-                }
-                finally
-                {
-                    reader.Close();
-                }
-            } else if (id.Contains("ED"))
-            {
-                query += " JOIN EmbeddedDevice on Device.Id = EmbeddedDevice.Device_id WHERE EmbeddedDevice.Device_id = @id";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", id);
-                connection.Open();
-                
-                SqlDataReader reader = command.ExecuteReader();
-                try
-                {
-                    if (reader.Read())
-                    {
-                        return new EmbeddedDevice
-                        {
-                            Device_Id = reader.GetString(0),
-                            Name = reader.GetString(1),
-                            IsOn = reader.GetBoolean(2),
-                            Id = reader.GetInt32(3),
-                            IpAddress = reader.GetString(4),
-                            NetworkName = reader.GetString(5)
-                        };
-                    }
-                }
-                finally
-                {
-                    reader.Close();
-                }
-            }
-        }
-
-        return null;
+        return _databaseRepository.GetDeviceById(id);
     }
     
     public bool AddDeviceByJson(JsonNode? json)
@@ -172,7 +56,11 @@ public class DeviceService : IDeviceService
                 if (smartWatch == null)
                     throw new ArgumentException("JSON deserialization failed. Seek help.");
                 
-                AddSmartWatch(smartWatch);
+                // edgecases
+                if (smartWatch.BatteryCharge is < 0 or > 100)
+                    throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
+                
+                _databaseRepository.AddSmartWatch(smartWatch);
                 break;
             }
             
@@ -190,7 +78,11 @@ public class DeviceService : IDeviceService
                 if (personalComputer == null)
                     throw new ArgumentException("JSON deserialization failed. Seek help.");
                 
-                AddPersonalComputer(personalComputer);
+                // edgecases
+                if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
+                    throw new ArgumentException("PC cannot be turned on without operating system.");
+                
+                _databaseRepository.AddPersonalComputer(personalComputer);
                 break;
             }
             
@@ -208,7 +100,24 @@ public class DeviceService : IDeviceService
                 if (embeddedDevice == null)
                     throw new ArgumentException("JSON deserialization failed. Seek help.");
                 
-                AddEmbeddedDevice(embeddedDevice);
+                // edge cases
+                if (!Regex.IsMatch(embeddedDevice.IpAddress,
+                        @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
+                {
+                    throw new ArgumentException("IP address is not a valid IP address.");
+                }
+
+                if (!embeddedDevice.IsOn && embeddedDevice.IsConnected)
+                {
+                    throw new ArgumentException("Device cannot be connected if it is turned off.");
+                }
+
+                if (embeddedDevice.IsOn && !embeddedDevice.NetworkName.Contains("MD Ltd."))
+                {
+                    throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
+                }
+                
+                _databaseRepository.AddEmbeddedDevice(embeddedDevice);
                 break;
             }
 
@@ -217,195 +126,6 @@ public class DeviceService : IDeviceService
         }
         
         return false;
-    }
-    
-    private void AddSmartWatch(SmartWatch smartWatch)
-    {
-        // edgecases
-        if (smartWatch.BatteryCharge is < 0 or > 100)
-            throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
-        
-        // adding id and inserting into the db
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var countSwQuery = "SELECT MAX(id) FROM SmartWatch";
-            var count = -1;
-            
-            SqlCommand countCommand = new SqlCommand(countSwQuery, connection);
-            connection.Open();
-            SqlDataReader reader = countCommand.ExecuteReader();
-            try
-            {
-                if (reader.Read())
-                {
-                    count = reader.GetInt32(0);
-                }
-            }
-            finally
-            {
-                reader.Close();
-            }
-            
-            // set the device id only if it was not set
-            if (smartWatch.Device_Id.IsNullOrEmpty())
-            {
-                smartWatch.Device_Id = $"SW-{count + 1}";
-            }
-
-            var insertDeviceResult = -1;
-            var insertWatchResult = -1;
-
-            var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-            var insertWatchQuery = $"INSERT INTO SmartWatch VALUES (@Id, @BatteryCharge, @Device_id)";
-            SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection);
-            insertDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
-            insertDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
-            insertDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
-            
-            insertDeviceResult = insertDeviceCommand.ExecuteNonQuery();
-            if (insertDeviceResult == -1)
-                throw new ApplicationException("Insert device failed.");
-            
-            SqlCommand insertWatchCommand = new SqlCommand(insertWatchQuery, connection);
-            insertWatchCommand.Parameters.AddWithValue("@Id", count + 1);
-            insertWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
-            insertWatchCommand.Parameters.AddWithValue("@Device_id", smartWatch.Device_Id);
-            
-            insertWatchResult = insertWatchCommand.ExecuteNonQuery();
-            if (insertWatchResult == -1)
-                throw new ApplicationException("Insert watch failed.");
-        }
-    }
-
-    private void AddPersonalComputer(PersonalComputer personalComputer)
-    {
-        // edgecases
-        if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
-            throw new ArgumentException("PC cannot be turned on without operating system.");
-        
-        // adding id and inserting into the db
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var countPcQuery = "SELECT MAX(id) FROM PersonalComputer";
-            var count = -1;
-            
-            SqlCommand countCommand = new SqlCommand(countPcQuery, connection);
-            connection.Open();
-            SqlDataReader reader = countCommand.ExecuteReader();
-            try
-            {
-                if (reader.Read())
-                {
-                    count = reader.GetInt32(0);
-                }
-            }
-            finally
-            {
-                reader.Close();
-            }
-            
-            // set the device id only if it was not set
-            if (personalComputer.Device_Id.IsNullOrEmpty())
-            {
-                personalComputer.Device_Id = $"P-{count + 1}";
-            }
-
-            var insertDeviceResult = -1;
-            var insertComputerResult = -1;
-
-            var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-            var insertComputerQuery = $"INSERT INTO PersonalComputer VALUES (@Id, @OperatingSystem, @Device_id)";
-            SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection);
-            insertDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
-            insertDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
-            insertDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
-            
-            insertDeviceResult = insertDeviceCommand.ExecuteNonQuery();
-            if (insertDeviceResult == -1)
-                throw new ApplicationException("Insert device failed.");
-            
-            SqlCommand insertComputerCommand = new SqlCommand(insertComputerQuery, connection);
-            insertComputerCommand.Parameters.AddWithValue("@Id", count + 1);
-            insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
-            insertComputerCommand.Parameters.AddWithValue("@Device_id", personalComputer.Device_Id);
-            
-            insertComputerResult = insertComputerCommand.ExecuteNonQuery();
-            if (insertComputerResult == -1)
-                throw new ApplicationException("Insert computer failed.");
-        }
-    }
-    
-    private void AddEmbeddedDevice(EmbeddedDevice embeddedDevice)
-    {
-        // edge cases
-        if (!Regex.IsMatch(embeddedDevice.IpAddress,
-                @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
-        {
-            throw new ArgumentException("IP address is not a valid IP address.");
-        }
-
-        if (!embeddedDevice.IsOn && embeddedDevice.IsConnected)
-        {
-            throw new ArgumentException("Device cannot be connected if it is turned off.");
-        }
-
-        if (embeddedDevice.IsOn && !embeddedDevice.NetworkName.Contains("MD Ltd."))
-        {
-            throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
-        }
-        
-        // adding id and inserting into the db
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var countEdQuery = "SELECT MAX(id) FROM EmbeddedDevice";
-            var count = -1;
-            
-            SqlCommand countCommand = new SqlCommand(countEdQuery, connection);
-            connection.Open();
-            SqlDataReader reader = countCommand.ExecuteReader();
-            try
-            {
-                if (reader.Read())
-                {
-                    count = reader.GetInt32(0);
-                }
-            }
-            finally
-            {
-                reader.Close();
-            }
-            
-            // set the device id only if it was not set
-            if (embeddedDevice.Device_Id.IsNullOrEmpty())
-            {
-                embeddedDevice.Device_Id = $"ED-{count + 1}";
-            }
-
-            var insertDeviceResult = -1;
-            var insertEmbeddedResult = -1;
-
-            var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-            var insertEmbeddedQuery = $"INSERT INTO EmbeddedDevice VALUES (@Id, @IpAddress, @NetworkName, @IsConnected, @Device_id)";
-            SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection);
-            insertDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
-            insertDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
-            insertDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
-            
-            insertDeviceResult = insertDeviceCommand.ExecuteNonQuery();
-            if (insertDeviceResult == -1)
-                throw new ApplicationException("Insert device failed.");
-            
-            SqlCommand insertEmbeddedCommand = new SqlCommand(insertEmbeddedQuery, connection);
-            insertEmbeddedCommand.Parameters.AddWithValue("@Id", count + 1);
-            insertEmbeddedCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
-            insertEmbeddedCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
-            insertEmbeddedCommand.Parameters.AddWithValue("@IsCOnnected", embeddedDevice.IsConnected);
-            insertEmbeddedCommand.Parameters.AddWithValue("@Device_id", embeddedDevice.Device_Id);
-            
-            insertEmbeddedResult = insertEmbeddedCommand.ExecuteNonQuery();
-            if (insertEmbeddedResult == -1)
-                throw new ApplicationException("Insert watch failed.");
-        }
     }
 
     public bool AddDeviceByRawText(string text)
@@ -434,7 +154,12 @@ public class DeviceService : IDeviceService
                 {
                     throw new ArgumentException("Invalid int value for BatteryCharge parameter.");
                 }
-                AddSmartWatch(smartWatch);
+                
+                // edgecases
+                if (smartWatch.BatteryCharge is < 0 or > 100)
+                    throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
+                
+                _databaseRepository.AddSmartWatch(smartWatch);
                 break;
             }
             case "P":
@@ -459,7 +184,12 @@ public class DeviceService : IDeviceService
                 {
                     personalComputer.OperatingSystem = "";
                 }
-                AddPersonalComputer(personalComputer);
+                
+                // edgecases
+                if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
+                    throw new ArgumentException("PC cannot be turned on without operating system.");
+                
+                _databaseRepository.AddPersonalComputer(personalComputer);
                 break;
             }
             case "ED":
@@ -471,7 +201,25 @@ public class DeviceService : IDeviceService
                 embeddedDevice.IpAddress = parts[2];
                 embeddedDevice.NetworkName = parts[3];
                 embeddedDevice.IsConnected = false;
-                AddEmbeddedDevice(embeddedDevice);
+                
+                // edge cases
+                if (!Regex.IsMatch(embeddedDevice.IpAddress,
+                        @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
+                {
+                    throw new ArgumentException("IP address is not a valid IP address.");
+                }
+
+                if (!embeddedDevice.IsOn && embeddedDevice.IsConnected)
+                {
+                    throw new ArgumentException("Device cannot be connected if it is turned off.");
+                }
+
+                if (embeddedDevice.IsOn && !embeddedDevice.NetworkName.Contains("MD Ltd."))
+                {
+                    throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
+                }
+                
+                _databaseRepository.AddEmbeddedDevice(embeddedDevice);
                 break;
             }
             default: throw new ArgumentException("Unknown device.");
@@ -485,17 +233,17 @@ public class DeviceService : IDeviceService
         var id = json["device_id"]?.ToString();
         if (id.IsNullOrEmpty())
             throw new ArgumentException("Invalid or not specified id.");
-        
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
 
         if (GetDeviceById(id) == null)
         {
             throw new FileNotFoundException("Device not found.");
         }
 
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        
         if (id.Contains("SW"))
         {
             SmartWatch? smartWatch;
@@ -511,7 +259,11 @@ public class DeviceService : IDeviceService
             if (smartWatch == null)
                 throw new ArgumentException("JSON serialization failed. Seek help.");
             
-            UpdateSmartWatch(smartWatch);
+            // edgecases
+            if (smartWatch.BatteryCharge is < 0 or > 100)
+                throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
+            
+            _databaseRepository.UpdateSmartWatch(smartWatch);
         } else if (id.Contains("P"))
         {
             PersonalComputer? personalComputer;
@@ -527,7 +279,11 @@ public class DeviceService : IDeviceService
             if (personalComputer == null)
                 throw new ArgumentException("JSON serialization failed. Seek help.");
             
-            UpdatePersonalComputer(personalComputer);
+            // edgecases
+            if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
+                throw new ArgumentException("PC cannot be turned on without operating system.");
+            
+            _databaseRepository.UpdatePersonalComputer(personalComputer);
         }
         else if (id.Contains("ED"))
         {
@@ -544,7 +300,24 @@ public class DeviceService : IDeviceService
             if (embeddedDevice == null)
                 throw new ArgumentException("JSON serialization failed. Seek help.");
             
-            UpdateEmbeddedDevice(embeddedDevice);
+            // edge cases
+            if (!Regex.IsMatch(embeddedDevice.IpAddress,
+                    @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
+            {
+                throw new ArgumentException("IP address is not a valid IP address.");
+            }
+
+            if (!embeddedDevice.IsOn && embeddedDevice.IsConnected)
+            {
+                throw new ArgumentException("Device cannot be connected if it is turned off.");
+            }
+
+            if (embeddedDevice.IsConnected && !embeddedDevice.NetworkName.Contains("MD Ltd."))
+            {
+                throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
+            }
+            
+            _databaseRepository.UpdateEmbeddedDevice(embeddedDevice);
         }
         else
         {
@@ -554,128 +327,6 @@ public class DeviceService : IDeviceService
         return true;
     }
 
-    private void UpdateSmartWatch(SmartWatch smartWatch)
-    {
-        // edgecases
-        if (smartWatch.BatteryCharge is < 0 or > 100)
-            throw new ArgumentException("JSON deserialization failed. Battery charge is out of range [0 - 100].");
-        
-        // updating the whole object
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var updateDeviceResult = -1;
-            var updateWatchResult = -1;
-
-            var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
-            var updateWatchQuery = "UPDATE SmartWatch SET BatteryCharge = @BatteryCharge WHERE Device_id = @Id";
-
-            connection.Open();
-            
-            SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
-            updateDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
-            updateDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
-            updateDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
-            
-            updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
-            if (updateDeviceResult == -1)
-                throw new ApplicationException("Updating device failed.");
-
-            SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
-            updateWatchCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
-            updateWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
-
-            updateWatchResult = updateWatchCommand.ExecuteNonQuery();
-            if (updateWatchResult == -1)
-                throw new ApplicationException("Updating device failed.");
-        }
-    }
-    
-    private void UpdatePersonalComputer(PersonalComputer personalComputer)
-    {
-        // edgecases
-        if (personalComputer.IsOn && personalComputer.OperatingSystem.IsNullOrEmpty())
-            throw new ArgumentException("PC cannot be turned on without operating system.");
-        
-        // updating the whole object
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var updateDeviceResult = -1;
-            var updateWatchResult = -1;
-
-            var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
-            var updateWatchQuery = "UPDATE PersonalComputer SET OperatingSystem = @OperatingSystem WHERE Device_id = @Id";
-
-            connection.Open();
-            
-            SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
-            updateDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
-            updateDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
-            updateDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
-            
-            updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
-            if (updateDeviceResult == -1)
-                throw new ApplicationException("Updating device failed.");
-
-            SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
-            updateWatchCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
-            updateWatchCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
-
-            updateWatchResult = updateWatchCommand.ExecuteNonQuery();
-            if (updateWatchResult == -1)
-                throw new ApplicationException("Updating device failed.");
-        }
-    }
-    
-    private void UpdateEmbeddedDevice(EmbeddedDevice embeddedDevice)
-    {
-        if (!Regex.IsMatch(embeddedDevice.IpAddress,
-                @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$"))
-        {
-            throw new ArgumentException("IP address is not a valid IP address.");
-        }
-
-        if (!embeddedDevice.IsOn && embeddedDevice.IsConnected)
-        {
-            throw new ArgumentException("Device cannot be connected if it is turned off.");
-        }
-
-        if (embeddedDevice.IsConnected && !embeddedDevice.NetworkName.Contains("MD Ltd."))
-        {
-            throw new ArgumentException("The network name should contain \"MD Ltd.\" for the device to be able to be connected.");
-        }
-        
-        // updating the whole object
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var updateDeviceResult = -1;
-            var updateWatchResult = -1;
-
-            var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
-            var updateWatchQuery = "UPDATE EmbeddedDevice SET IpAddress = @IpAddress, NetworkName = @NetworkName, IsConnected = @IsConnected WHERE Device_id = @Id";
-
-            connection.Open();
-            
-            SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection);
-            updateDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
-            updateDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
-            updateDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
-            
-            updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
-            if (updateDeviceResult == -1)
-                throw new ApplicationException("Updating device failed.");
-
-            SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection);
-            updateWatchCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
-            updateWatchCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
-            updateWatchCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
-            updateWatchCommand.Parameters.AddWithValue("@IsConnected", embeddedDevice.IsConnected);
-
-            updateWatchResult = updateWatchCommand.ExecuteNonQuery();
-            if (updateWatchResult == -1)
-                throw new ApplicationException("Updating device failed.");
-        }
-    }
-
     public bool DeleteDevice(string id)
     {
         if (GetDeviceById(id) == null)
@@ -683,92 +334,11 @@ public class DeviceService : IDeviceService
             throw new FileNotFoundException("Device not found.");
         }
         
-        if (id.Contains("SW")) DeleteWatch(id);
-        else if (id.Contains("P")) DeleteComputer(id);
-        else if (id.Contains("ED")) DeleteEmbeddedDevice(id);
+        if (id.Contains("SW")) _databaseRepository.DeleteWatch(id);
+        else if (id.Contains("P")) _databaseRepository.DeleteComputer(id);
+        else if (id.Contains("ED")) _databaseRepository.DeleteEmbeddedDevice(id);
         else throw new ApplicationException("Unknown device type.");
 
         return true;
-    }
-
-    private void DeleteWatch(string id)
-    {
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var deleteWatchResult = -1;
-            var deleteDeviceResult = -1;
-
-            var deleteWatchQuery = "DELETE FROM SmartWatch WHERE Device_Id = @Device_Id";
-            var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
-
-            connection.Open();
-            SqlCommand deleteWatchCommand = new SqlCommand(deleteWatchQuery, connection);
-            deleteWatchCommand.Parameters.AddWithValue("@Device_Id", id);
-            deleteWatchResult = deleteWatchCommand.ExecuteNonQuery();
-
-            if (deleteWatchResult == -1)
-                throw new ApplicationException("Deleting the device failed.");
-                
-            SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
-            deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
-            deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
-                
-            if (deleteDeviceResult == -1)
-                throw new ApplicationException("Deleting the device failed.");
-        }
-    }
-    
-    private void DeleteComputer(string id)
-    {
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var deleteComputerResult = -1;
-            var deleteDeviceResult = -1;
-
-            var deleteComputerQuery = "DELETE FROM PersonalComputer WHERE Device_Id = @Device_Id";
-            var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
-
-            connection.Open();
-            SqlCommand deleteComputerCommand = new SqlCommand(deleteComputerQuery, connection);
-            deleteComputerCommand.Parameters.AddWithValue("@Device_Id", id);
-            deleteComputerResult = deleteComputerCommand.ExecuteNonQuery();
-
-            if (deleteComputerResult == -1)
-                throw new ApplicationException("Deleting the device failed.");
-                
-            SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
-            deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
-            deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
-                
-            if (deleteDeviceResult == -1)
-                throw new ApplicationException("Deleting the device failed.");
-        }
-    }
-    
-    private void DeleteEmbeddedDevice(string id)
-    {
-        using (SqlConnection connection = new SqlConnection(_connectionString))
-        {
-            var deleteEmbeddedResult = -1;
-            var deleteDeviceResult = -1;
-
-            var deleteEmbeddedQuery = "DELETE FROM EmbeddedDevice WHERE Device_Id = @Device_Id";
-            var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
-
-            connection.Open();
-            SqlCommand deleteEmbeddedCommand = new SqlCommand(deleteEmbeddedQuery, connection);
-            deleteEmbeddedCommand.Parameters.AddWithValue("@Device_Id", id);
-            deleteEmbeddedResult = deleteEmbeddedCommand.ExecuteNonQuery();
-
-            if (deleteEmbeddedResult == -1)
-                throw new ApplicationException("Deleting the device failed.");
-                
-            SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
-            deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
-            deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
-                
-            if (deleteDeviceResult == -1)
-                throw new ApplicationException("Deleting the device failed.");
-        }
     }
 }
