@@ -29,6 +29,11 @@ public class SmartWatch : Device, IPowerNotifier
     public string Device_Id { get; set; }
     
     /// <summary>
+    /// Row version timestamp.
+    /// </summary>
+    public byte[] RowVersion { get; set; }
+    
+    /// <summary>
     /// Initializes a new instance of the SmartWatch class.
     /// </summary>
     /// <param name="id">The unique device ID.</param>

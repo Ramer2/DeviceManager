@@ -1,4 +1,5 @@
-﻿using DeviceManager.Application.dtos;
+﻿using System.Data;
+using DeviceManager.Application.dtos;
 using Devices.devices;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
@@ -72,8 +73,10 @@ public class DatabaseRepository : IDatabaseRepository
                             Device_Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
-                            Id = reader.GetInt32(3),
-                            BatteryCharge = reader.GetInt32(4)
+                            Id = reader.GetInt32(4),
+                            BatteryCharge = reader.GetInt32(5),
+                            DeviceRowVersion = reader.GetSqlBinary(reader.GetOrdinal("DeviceRowVersion")).Value,
+                            RowVersion = reader.GetSqlBinary(reader.GetOrdinal("RowVersion")).Value
                         };
                     }
                 }
@@ -98,8 +101,10 @@ public class DatabaseRepository : IDatabaseRepository
                             Device_Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
-                            Id = reader.GetInt32(3),
-                            OperatingSystem = reader.GetString(4)
+                            Id = reader.GetInt32(4),
+                            OperatingSystem = reader.GetString(5),
+                            DeviceRowVersion = reader.GetSqlBinary(reader.GetOrdinal("DeviceRowVersion")).Value,
+                            RowVersion = reader.GetSqlBinary(reader.GetOrdinal("RowVersion")).Value
                         };
                     }
                 }
@@ -124,9 +129,11 @@ public class DatabaseRepository : IDatabaseRepository
                             Device_Id = reader.GetString(0),
                             Name = reader.GetString(1),
                             IsOn = reader.GetBoolean(2),
-                            Id = reader.GetInt32(3),
-                            IpAddress = reader.GetString(4),
-                            NetworkName = reader.GetString(5)
+                            Id = reader.GetInt32(4),
+                            IpAddress = reader.GetString(5),
+                            NetworkName = reader.GetString(6),
+                            DeviceRowVersion = reader.GetSqlBinary(reader.GetOrdinal("DeviceRowVersion")).Value,
+                            RowVersion = reader.GetSqlBinary(reader.GetOrdinal("RowVersion")).Value
                         };
                     }
                 }
@@ -175,8 +182,8 @@ public class DatabaseRepository : IDatabaseRepository
                 var insertDeviceResult = -1;
                 var insertWatchResult = -1;
 
-                var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-                var insertWatchQuery = $"INSERT INTO SmartWatch VALUES (@Id, @BatteryCharge, @Device_id)";
+                var insertDeviceQuery = $"INSERT INTO Device (Id, Name, IsOn) VALUES (@Id, @Name, @IsOn)";
+                var insertWatchQuery = $"INSERT INTO SmartWatch (Id, BatteryCharge, Device_id) VALUES (@Id, @BatteryCharge, @Device_id)";
                 SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection, transaction);
                 insertDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
                 insertDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
@@ -240,8 +247,8 @@ public class DatabaseRepository : IDatabaseRepository
                 var insertDeviceResult = -1;
                 var insertComputerResult = -1;
 
-                var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-                var insertComputerQuery = $"INSERT INTO PersonalComputer VALUES (@Id, @OperatingSystem, @Device_id)";
+                var insertDeviceQuery = $"INSERT INTO Device (Id, Name, IsOn) VALUES (@Id, @Name, @IsOn)";
+                var insertComputerQuery = $"INSERT INTO PersonalComputer (Id, OperatingSystem, Device_id) VALUES (@Id, @OperatingSystem, @Device_id)";
                 SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection, transaction);
                 insertDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
                 insertDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
@@ -305,8 +312,8 @@ public class DatabaseRepository : IDatabaseRepository
                 var insertDeviceResult = -1;
                 var insertEmbeddedResult = -1;
 
-                var insertDeviceQuery = $"INSERT INTO Device VALUES (@Id, @Name, @IsOn)";
-                var insertEmbeddedQuery = $"INSERT INTO EmbeddedDevice VALUES (@Id, @IpAddress, @NetworkName, @IsConnected, @Device_id)";
+                var insertDeviceQuery = $"INSERT INTO Device (Id, Name, IsOn) VALUES (@Id, @Name, @IsOn)";
+                var insertEmbeddedQuery = $"INSERT INTO EmbeddedDevice (Id, IpAddress, NetworkName, IsConnected, Device_id) VALUES (@Id, @IpAddress, @NetworkName, @IsConnected, @Device_id)";
                 SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection, transaction);
                 insertDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
                 insertDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
@@ -339,7 +346,6 @@ public class DatabaseRepository : IDatabaseRepository
     
     public void UpdateSmartWatch(SmartWatch smartWatch)
     {
-        // updating the whole object
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             connection.Open();
@@ -347,29 +353,55 @@ public class DatabaseRepository : IDatabaseRepository
 
             try
             {
-                var updateDeviceResult = -1;
-                var updateWatchResult = -1;
+                // getting the timestamps
+                byte[] deviceRowVersion = null;
+                byte[] watchRowVersion = null;
 
-                var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
-                var updateWatchQuery = "UPDATE SmartWatch SET BatteryCharge = @BatteryCharge WHERE Device_id = @Id";
-            
-                SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection, transaction);
-                updateDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
-                updateDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
-                updateDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
-            
-                updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
-                if (updateDeviceResult == -1)
-                    throw new ApplicationException("Updating device failed.");
+                var rowVersionQuery = $"SELECT d.DeviceRowVersion AS DeviceRowVersion, sw.RowVersion AS WatchRowVersion FROM Device d INNER JOIN SmartWatch sw ON d.Id = sw.Device_id WHERE d.Id = @Id";
 
-                SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection, transaction);
-                updateWatchCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
-                updateWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
+                using (SqlCommand rowVersionCmd = new SqlCommand(rowVersionQuery, connection, transaction))
+                {
+                    rowVersionCmd.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
+                    using (var reader = rowVersionCmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            deviceRowVersion = (byte[])reader["DeviceRowVersion"];
+                            watchRowVersion = (byte[])reader["WatchRowVersion"];
+                        }
+                        else
+                        {
+                            throw new KeyNotFoundException("SmartWatch with the specified ID was not found.");
+                        }
+                    }
+                }
 
-                updateWatchResult = updateWatchCommand.ExecuteNonQuery();
-                if (updateWatchResult == -1)
-                    throw new ApplicationException("Updating device failed.");
-                
+                // updating the devices
+                var updateDeviceQuery = $"UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id AND DeviceRowVersion = @DeviceRowVersion";
+
+                var updateWatchQuery = $"UPDATE SmartWatch SET BatteryCharge = @BatteryCharge WHERE Device_id = @Id AND RowVersion = @WatchRowVersion";
+
+                using (SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection, transaction))
+                {
+                    updateDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
+                    updateDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
+                    updateDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
+                    updateDeviceCommand.Parameters.Add("@DeviceRowVersion", SqlDbType.Timestamp).Value = deviceRowVersion;
+
+                    if (updateDeviceCommand.ExecuteNonQuery() == 0)
+                        throw new DBConcurrencyException("Device update failed due to concurrent modification.");
+                }
+
+                using (SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection, transaction))
+                {
+                    updateWatchCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
+                    updateWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
+                    updateWatchCommand.Parameters.Add("@WatchRowVersion", SqlDbType.Timestamp).Value = watchRowVersion;
+
+                    if (updateWatchCommand.ExecuteNonQuery() == 0)
+                        throw new DBConcurrencyException("SmartWatch update failed due to concurrent modification.");
+                }
+
                 transaction.Commit();
             }
             catch
@@ -382,7 +414,6 @@ public class DatabaseRepository : IDatabaseRepository
     
     public void UpdatePersonalComputer(PersonalComputer personalComputer)
     {
-        // updating the whole object
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             connection.Open();
@@ -390,29 +421,50 @@ public class DatabaseRepository : IDatabaseRepository
 
             try
             {
-                var updateDeviceResult = -1;
-                var updateWatchResult = -1;
+                // getting the timestamps
+                byte[] deviceRowVersion = null;
+                byte[] computerRowVersion = null;
 
-                var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
-                var updateWatchQuery = "UPDATE PersonalComputer SET OperatingSystem = @OperatingSystem WHERE Device_id = @Id";
+                var rowVersionQuery = $"SELECT d.DeviceRowVersion AS DeviceRowVersion, p.RowVersion AS ComputerRowVersion FROM Device d INNER JOIN PersonalComputer p ON d.Id = p.Device_id WHERE d.Id = @Id";
 
+                using (SqlCommand rowVersionCmd = new SqlCommand(rowVersionQuery, connection, transaction))
+                {
+                    rowVersionCmd.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
+                    using (var reader = rowVersionCmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            deviceRowVersion = (byte[])reader["DeviceRowVersion"];
+                            computerRowVersion = (byte[])reader["ComputerRowVersion"];
+                        }
+                        else
+                        {
+                            throw new KeyNotFoundException("PersonalComputer with the specified ID was not found.");
+                        }
+                    }
+                }
+                
+                // updating the devices
+                var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id AND DeviceRowVersion = @DeviceRowVersion";
+                var updateComputerQuery = "UPDATE PersonalComputer SET OperatingSystem = @OperatingSystem WHERE Device_id = @Id AND RowVersion = @ComputerRowVersion";
+    
                 SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection, transaction);
                 updateDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
                 updateDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
                 updateDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
+                updateDeviceCommand.Parameters.Add("@DeviceRowVersion", SqlDbType.Timestamp).Value = deviceRowVersion;
+        
+                if (updateDeviceCommand.ExecuteNonQuery() == 0)
+                    throw new DBConcurrencyException("Device update failed due to concurrent modification.");
+    
+                SqlCommand updateComputerCommand = new SqlCommand(updateComputerQuery, connection, transaction);
+                updateComputerCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
+                updateComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
+                updateComputerCommand.Parameters.Add("@ComputerRowVersion", SqlDbType.Timestamp).Value = computerRowVersion;
+        
+                if (updateComputerCommand.ExecuteNonQuery() == 0)
+                    throw new DBConcurrencyException("Device update failed due to concurrent modification.");
             
-                updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
-                if (updateDeviceResult == -1)
-                    throw new ApplicationException("Updating device failed.");
-
-                SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection, transaction);
-                updateWatchCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
-                updateWatchCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
-
-                updateWatchResult = updateWatchCommand.ExecuteNonQuery();
-                if (updateWatchResult == -1)
-                    throw new ApplicationException("Updating device failed.");
-                
                 transaction.Commit();
             }
             catch
@@ -425,7 +477,6 @@ public class DatabaseRepository : IDatabaseRepository
     
     public void UpdateEmbeddedDevice(EmbeddedDevice embeddedDevice)
     {
-// updating the whole object
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             connection.Open();
@@ -433,31 +484,52 @@ public class DatabaseRepository : IDatabaseRepository
 
             try
             {
-                var updateDeviceResult = -1;
-                var updateWatchResult = -1;
+                // getting the timestamps
+                byte[] deviceRowVersion = null;
+                byte[] embeddedRowVersion = null;
 
-                var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id";
-                var updateWatchQuery = "UPDATE EmbeddedDevice SET IpAddress = @IpAddress, NetworkName = @NetworkName, IsConnected = @IsConnected WHERE Device_id = @Id";
+                var rowVersionQuery = $"SELECT d.DeviceRowVersion AS DeviceRowVersion, ed.RowVersion AS EmbeddedRowVersion FROM Device d INNER JOIN EmbeddedDevice ed ON d.Id = ed.Device_id WHERE d.Id = @Id";
 
+                using (SqlCommand rowVersionCmd = new SqlCommand(rowVersionQuery, connection, transaction))
+                {
+                    rowVersionCmd.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
+                    using (var reader = rowVersionCmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            deviceRowVersion = (byte[])reader["DeviceRowVersion"];
+                            embeddedRowVersion = (byte[])reader["EmbeddedRowVersion"];
+                        }
+                        else
+                        {
+                            throw new KeyNotFoundException("EmbeddedDevice with the specified ID was not found.");
+                        }
+                    }
+                }
+                
+                // updating the devices
+                var updateDeviceQuery = "UPDATE Device SET IsOn = @IsOn, Name = @Name WHERE Id = @Id AND DeviceRowVersion = @DeviceRowVersion";
+                var updateEmbeddedQuery = "UPDATE EmbeddedDevice SET IpAddress = @IpAddress, NetworkName = @NetworkName, IsConnected = @IsConnected WHERE Device_id = @Id AND RowVersion = @EmbeddedRowVersion";
+    
                 SqlCommand updateDeviceCommand = new SqlCommand(updateDeviceQuery, connection, transaction);
                 updateDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
                 updateDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
                 updateDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
+                updateDeviceCommand.Parameters.Add("@DeviceRowVersion", SqlDbType.Timestamp).Value = deviceRowVersion;
+        
+                if (updateDeviceCommand.ExecuteNonQuery() == 0)
+                    throw new DBConcurrencyException("Device update failed due to concurrent modification.");
+    
+                SqlCommand updateEmbeddeCommand = new SqlCommand(updateEmbeddedQuery, connection, transaction);
+                updateEmbeddeCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
+                updateEmbeddeCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
+                updateEmbeddeCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
+                updateEmbeddeCommand.Parameters.AddWithValue("@IsConnected", embeddedDevice.IsConnected);
+                updateEmbeddeCommand.Parameters.Add("@EmbeddedRowVersion", SqlDbType.Timestamp).Value = embeddedRowVersion;
+        
+                if (updateEmbeddeCommand.ExecuteNonQuery() == 0)
+                    throw new DBConcurrencyException("Device update failed due to concurrent modification.");
             
-                updateDeviceResult = updateDeviceCommand.ExecuteNonQuery();
-                if (updateDeviceResult == -1)
-                    throw new ApplicationException("Updating device failed.");
-
-                SqlCommand updateWatchCommand = new SqlCommand(updateWatchQuery, connection, transaction);
-                updateWatchCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
-                updateWatchCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
-                updateWatchCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
-                updateWatchCommand.Parameters.AddWithValue("@IsConnected", embeddedDevice.IsConnected);
-
-                updateWatchResult = updateWatchCommand.ExecuteNonQuery();
-                if (updateWatchResult == -1)
-                    throw new ApplicationException("Updating device failed.");
-                
                 transaction.Commit();
             }
             catch

@@ -11,6 +11,11 @@ public class PersonalComputer : Device
     public string OperatingSystem { get; set; }
     
     public string Device_Id { get; set; }
+    
+    /// <summary>
+    /// Row version timestamp.
+    /// </summary>
+    public byte[] RowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the PersonalComputer class.

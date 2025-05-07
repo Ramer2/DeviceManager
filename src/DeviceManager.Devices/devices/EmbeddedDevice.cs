@@ -24,6 +24,11 @@ public class EmbeddedDevice : Device
     public bool IsConnected { get; set; }
     
     public string Device_Id { get; set; }
+    
+    /// <summary>
+    /// Row version timestamp.
+    /// </summary>
+    public byte[] RowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the EmbeddedDevice class.

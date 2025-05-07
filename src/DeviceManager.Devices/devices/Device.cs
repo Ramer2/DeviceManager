@@ -19,6 +19,11 @@ public abstract class Device
     /// Indicator for whether the device is turned on.
     /// </summary>
     public bool IsOn {get; set;}
+    
+    /// <summary>
+    /// Row version timestamp.
+    /// </summary>
+    public byte[] DeviceRowVersion { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the Device class.
