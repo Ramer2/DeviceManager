@@ -13,7 +13,7 @@ CREATE TABLE Device (
 
 -- Table: EmbeddedDevice
 CREATE TABLE EmbeddedDevice (
-    Id                      int NOT NULL,
+    Id                      int IDENTITY(1, 1) NOT NULL,
     IpAddress      varchar(250) NOT NULL,
     NetworkName    varchar(250) NOT NULL,
     IsConnected             bit NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE EmbeddedDevice (
 
 -- Table: PersonalComputer
 CREATE TABLE PersonalComputer (
-    Id                          int NOT NULL,
+    Id                          int IDENTITY(1, 1) NOT NULL,
     OperatingSystem    varchar(250) NOT NULL,
     Device_id          varchar(250) NOT NULL,
     RowVersion           ROWVERSION NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE PersonalComputer (
 
 -- Table: SmartWatch
 CREATE TABLE SmartWatch (
-    Id                      int NOT NULL,
+    Id                      int IDENTITY(1, 1) NOT NULL,
     BatteryCharge           int NOT NULL,
     Device_id      varchar(250) NOT NULL,
     RowVersion       ROWVERSION NOT NULL,

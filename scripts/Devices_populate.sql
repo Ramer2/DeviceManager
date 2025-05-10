@@ -1,23 +1,11 @@
-﻿-- Insert data into Device table
-INSERT INTO Device (Id, Name, IsOn) VALUES
-                ('ED-1', 'Raspberry Pi 4', 1),
-                ('P-1', 'Dell XPS 13', 1),
-                ('SW-1', 'Apple Watch Series 6', 0),
-                ('ED-2', 'ESP32 Sensor', 1),
-                ('P-2', 'Lenovo ThinkPad', 0),
-                ('SW-2', 'Samsung Galaxy Watch', 1);
+﻿-- Add SmartWatches
+EXEC AddSmartWatch @DeviceId = 'SW-1', @Name = 'Apple Watch Series 6', @IsOn = 0, @BatteryCharge = 85;
+EXEC AddSmartWatch @DeviceId = 'SW-2', @Name = 'Samsung Galaxy Watch', @IsOn = 1, @BatteryCharge = 60;
 
--- Insert data into EmbeddedDevice table
-INSERT INTO EmbeddedDevice (Id, IpAddress, NetworkName, IsConnected, Device_id) VALUES
-                (1, '192.168.0.10', 'HomeNetwork', 1, 'ED-1'),
-                (2, '192.168.0.11', 'OfficeNetwork', 1, 'ED-2');
+-- Add Personal Computers
+EXEC AddPersonalComputer @DeviceId = 'P-1', @Name = 'Dell XPS 13', @IsOn = 1, @OperatingSystem = 'Windows 11';
+EXEC AddPersonalComputer @DeviceId = 'P-2', @Name = 'Lenovo ThinkPad', @IsOn = 0, @OperatingSystem = 'Ubuntu 22.04';
 
--- Insert data into PersonalComputer table
-INSERT INTO PersonalComputer (Id, OperatingSystem, Device_id) VALUES
-                  (1, 'Windows 11', 'P-1'),
-                  (2, 'Ubuntu 22.04', 'P-2');
-
--- Insert data into SmartWatch table
-INSERT INTO SmartWatch (Id, BatteryCharge, Device_id) VALUES
-                  (1, 85, 'SW-1'),
-                  (2, 60, 'SW-2');
+-- Add Embedded Devices
+EXEC AddEmbeddedDevice @DeviceId = 'ED-1', @Name = 'Raspberry Pi 4', @IsOn = 1, @IpAddress = '192.168.0.10', @NetworkName = 'HomeNetwork', @IsConnected = 1;
+EXEC AddEmbeddedDevice @DeviceId = 'ED-2', @Name = 'ESP32 Sensor', @IsOn = 1, @IpAddress = '192.168.0.11', @NetworkName = 'OfficeNetwork', @IsConnected = 1;

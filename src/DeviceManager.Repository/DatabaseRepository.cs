@@ -153,62 +153,36 @@ public class DatabaseRepository : IDatabaseRepository
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             connection.Open();
-            SqlTransaction transaction = connection.BeginTransaction();
-
+            var countSwQuery = "SELECT MAX(id) FROM SmartWatch";
+            var count = -1;
+            SqlCommand countCommand = new SqlCommand(countSwQuery, connection);
+            SqlDataReader reader = countCommand.ExecuteReader();
             try
             {
-                var countSwQuery = "SELECT MAX(id) FROM SmartWatch";
-                var count = -1;
-                SqlCommand countCommand = new SqlCommand(countSwQuery, connection, transaction);
-                SqlDataReader reader = countCommand.ExecuteReader();
-                try
+                if (reader.Read())
                 {
-                    if (reader.Read())
-                    {
-                        count = reader.GetInt32(0);
-                    }
+                    count = reader.GetInt32(0);
                 }
-                finally
-                {
-                    reader.Close();
-                }
-
-                // set the device id only if it was not set
-                if (smartWatch.Device_Id.IsNullOrEmpty())
-                {
-                    smartWatch.Device_Id = $"SW-{count + 1}";
-                }
-
-                var insertDeviceResult = -1;
-                var insertWatchResult = -1;
-
-                var insertDeviceQuery = $"INSERT INTO Device (Id, Name, IsOn) VALUES (@Id, @Name, @IsOn)";
-                var insertWatchQuery = $"INSERT INTO SmartWatch (Id, BatteryCharge, Device_id) VALUES (@Id, @BatteryCharge, @Device_id)";
-                SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection, transaction);
-                insertDeviceCommand.Parameters.AddWithValue("@Id", smartWatch.Device_Id);
-                insertDeviceCommand.Parameters.AddWithValue("@Name", smartWatch.Name);
-                insertDeviceCommand.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
-
-                insertDeviceResult = insertDeviceCommand.ExecuteNonQuery();
-                if (insertDeviceResult == -1)
-                    throw new ApplicationException("Insert device failed.");
-
-                SqlCommand insertWatchCommand = new SqlCommand(insertWatchQuery, connection, transaction);
-                insertWatchCommand.Parameters.AddWithValue("@Id", count + 1);
-                insertWatchCommand.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
-                insertWatchCommand.Parameters.AddWithValue("@Device_id", smartWatch.Device_Id);
-
-                insertWatchResult = insertWatchCommand.ExecuteNonQuery();
-                if (insertWatchResult == -1)
-                    throw new ApplicationException("Insert watch failed.");
-                
-                transaction.Commit();
             }
-            catch
+            finally
             {
-                transaction.Rollback();
-                throw;
+                reader.Close();
             }
+
+            // set the device id only if it was not set
+            if (smartWatch.Device_Id.IsNullOrEmpty())
+            {
+                smartWatch.Device_Id = $"SW-{count + 1}";
+            }
+
+            SqlCommand command = new SqlCommand("AddSmartWatch", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@DeviceId", smartWatch.Device_Id);
+            command.Parameters.AddWithValue("@Name", smartWatch.Name);
+            command.Parameters.AddWithValue("@IsOn", smartWatch.IsOn);
+            command.Parameters.AddWithValue("@BatteryCharge", smartWatch.BatteryCharge);
+            
+            command.ExecuteNonQuery();
         }
     }
 
@@ -218,62 +192,36 @@ public class DatabaseRepository : IDatabaseRepository
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             connection.Open();
-            SqlTransaction transaction = connection.BeginTransaction();
-
+            var countPcQuery = "SELECT MAX(id) FROM PersonalComputer";
+            var count = -1;
+            SqlCommand countCommand = new SqlCommand(countPcQuery, connection);
+            SqlDataReader reader = countCommand.ExecuteReader();
             try
             {
-                var countPcQuery = "SELECT MAX(id) FROM PersonalComputer";
-                var count = -1;
-                SqlCommand countCommand = new SqlCommand(countPcQuery, connection, transaction);
-                SqlDataReader reader = countCommand.ExecuteReader();
-                try
+                if (reader.Read())
                 {
-                    if (reader.Read())
-                    {
-                        count = reader.GetInt32(0);
-                    }
+                    count = reader.GetInt32(0);
                 }
-                finally
-                {
-                    reader.Close();
-                }
-                
-                // set the device id only if it was not set
-                if (personalComputer.Device_Id.IsNullOrEmpty())
-                {
-                    personalComputer.Device_Id = $"P-{count + 1}";
-                }
-
-                var insertDeviceResult = -1;
-                var insertComputerResult = -1;
-
-                var insertDeviceQuery = $"INSERT INTO Device (Id, Name, IsOn) VALUES (@Id, @Name, @IsOn)";
-                var insertComputerQuery = $"INSERT INTO PersonalComputer (Id, OperatingSystem, Device_id) VALUES (@Id, @OperatingSystem, @Device_id)";
-                SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection, transaction);
-                insertDeviceCommand.Parameters.AddWithValue("@Id", personalComputer.Device_Id);
-                insertDeviceCommand.Parameters.AddWithValue("@Name", personalComputer.Name);
-                insertDeviceCommand.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
-                
-                insertDeviceResult = insertDeviceCommand.ExecuteNonQuery();
-                if (insertDeviceResult == -1)
-                    throw new ApplicationException("Insert device failed.");
-                
-                SqlCommand insertComputerCommand = new SqlCommand(insertComputerQuery, connection, transaction);
-                insertComputerCommand.Parameters.AddWithValue("@Id", count + 1);
-                insertComputerCommand.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
-                insertComputerCommand.Parameters.AddWithValue("@Device_id", personalComputer.Device_Id);
-                
-                insertComputerResult = insertComputerCommand.ExecuteNonQuery();
-                if (insertComputerResult == -1)
-                    throw new ApplicationException("Insert computer failed.");
-                
-                transaction.Commit();
             }
-            catch
+            finally
             {
-                transaction.Rollback();
-                throw;
+                reader.Close();
             }
+                
+            // set the device id only if it was not set
+            if (personalComputer.Device_Id.IsNullOrEmpty())
+            {
+                personalComputer.Device_Id = $"P-{count + 1}";
+            }
+
+            SqlCommand command = new SqlCommand("AddPersonalComputer", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@DeviceId", personalComputer.Device_Id);
+            command.Parameters.AddWithValue("@Name", personalComputer.Name);
+            command.Parameters.AddWithValue("@IsOn", personalComputer.IsOn);
+            command.Parameters.AddWithValue("@OperatingSystem", personalComputer.OperatingSystem);
+            
+            command.ExecuteNonQuery();
         }
     }
     
@@ -283,64 +231,38 @@ public class DatabaseRepository : IDatabaseRepository
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
             connection.Open();
-            SqlTransaction transaction = connection.BeginTransaction();
-
+            var countEdQuery = "SELECT MAX(id) FROM EmbeddedDevice";
+            var count = -1;
+            SqlCommand countCommand = new SqlCommand(countEdQuery, connection);
+            SqlDataReader reader = countCommand.ExecuteReader();
             try
             {
-                var countEdQuery = "SELECT MAX(id) FROM EmbeddedDevice";
-                var count = -1;
-                SqlCommand countCommand = new SqlCommand(countEdQuery, connection, transaction);
-                SqlDataReader reader = countCommand.ExecuteReader();
-                try
+                if (reader.Read())
                 {
-                    if (reader.Read())
-                    {
-                        count = reader.GetInt32(0);
-                    }
+                    count = reader.GetInt32(0);
                 }
-                finally
-                {
-                    reader.Close();
-                }
-                
-                // set the device id only if it was not set
-                if (embeddedDevice.Device_Id.IsNullOrEmpty())
-                {
-                    embeddedDevice.Device_Id = $"ED-{count + 1}";
-                }
-
-                var insertDeviceResult = -1;
-                var insertEmbeddedResult = -1;
-
-                var insertDeviceQuery = $"INSERT INTO Device (Id, Name, IsOn) VALUES (@Id, @Name, @IsOn)";
-                var insertEmbeddedQuery = $"INSERT INTO EmbeddedDevice (Id, IpAddress, NetworkName, IsConnected, Device_id) VALUES (@Id, @IpAddress, @NetworkName, @IsConnected, @Device_id)";
-                SqlCommand insertDeviceCommand = new SqlCommand(insertDeviceQuery, connection, transaction);
-                insertDeviceCommand.Parameters.AddWithValue("@Id", embeddedDevice.Device_Id);
-                insertDeviceCommand.Parameters.AddWithValue("@Name", embeddedDevice.Name);
-                insertDeviceCommand.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
-                
-                insertDeviceResult = insertDeviceCommand.ExecuteNonQuery();
-                if (insertDeviceResult == -1)
-                    throw new ApplicationException("Insert device failed.");
-                
-                SqlCommand insertEmbeddedCommand = new SqlCommand(insertEmbeddedQuery, connection, transaction);
-                insertEmbeddedCommand.Parameters.AddWithValue("@Id", count + 1);
-                insertEmbeddedCommand.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
-                insertEmbeddedCommand.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
-                insertEmbeddedCommand.Parameters.AddWithValue("@IsCOnnected", embeddedDevice.IsConnected);
-                insertEmbeddedCommand.Parameters.AddWithValue("@Device_id", embeddedDevice.Device_Id);
-                
-                insertEmbeddedResult = insertEmbeddedCommand.ExecuteNonQuery();
-                if (insertEmbeddedResult == -1)
-                    throw new ApplicationException("Insert watch failed.");
-                
-                transaction.Commit();
             }
-            catch
+            finally
             {
-                transaction.Rollback();
-                throw;
+                reader.Close();
             }
+                
+            // set the device id only if it was not set
+            if (embeddedDevice.Device_Id.IsNullOrEmpty())
+            {
+                embeddedDevice.Device_Id = $"ED-{count + 1}";
+            }
+
+            SqlCommand command = new SqlCommand("AddEmbeddedDevice", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@DeviceId", embeddedDevice.Device_Id);
+            command.Parameters.AddWithValue("@Name", embeddedDevice.Name);
+            command.Parameters.AddWithValue("@IsOn", embeddedDevice.IsOn);
+            command.Parameters.AddWithValue("@IpAddress", embeddedDevice.IpAddress);
+            command.Parameters.AddWithValue("@NetworkName", embeddedDevice.NetworkName);
+            command.Parameters.AddWithValue("@IsConnected", embeddedDevice.IsConnected);
+            
+            command.ExecuteNonQuery();
         }
     }
     
@@ -622,6 +544,7 @@ public class DatabaseRepository : IDatabaseRepository
     {
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
+            connection.Open();
             SqlTransaction transaction = connection.BeginTransaction();
 
             try
@@ -631,21 +554,22 @@ public class DatabaseRepository : IDatabaseRepository
 
                 var deleteEmbeddedQuery = "DELETE FROM EmbeddedDevice WHERE Device_Id = @Device_Id";
                 var deleteDeviceQuery = "DELETE FROM Device WHERE Id = @Id";
-
-                connection.Open();
-                SqlCommand deleteEmbeddedCommand = new SqlCommand(deleteEmbeddedQuery, connection);
+                
+                SqlCommand deleteEmbeddedCommand = new SqlCommand(deleteEmbeddedQuery, connection, transaction);
                 deleteEmbeddedCommand.Parameters.AddWithValue("@Device_Id", id);
                 deleteEmbeddedResult = deleteEmbeddedCommand.ExecuteNonQuery();
 
                 if (deleteEmbeddedResult == -1)
                     throw new ApplicationException("Deleting the device failed.");
                 
-                SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection);
+                SqlCommand deleteDeviceCommand = new SqlCommand(deleteDeviceQuery, connection, transaction);
                 deleteDeviceCommand.Parameters.AddWithValue("@Id", id);
                 deleteDeviceResult = deleteDeviceCommand.ExecuteNonQuery();
                 
                 if (deleteDeviceResult == -1)
                     throw new ApplicationException("Deleting the device failed.");
+                
+                transaction.Commit();
             }
             catch
             {

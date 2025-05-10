@@ -130,10 +130,10 @@ public class DeviceController : ControllerBase
         {
             return Results.NotFound(e.Message);
         }
-        catch (Exception e)
-        {
-            return Results.BadRequest(e.Message);
-        }
+        // catch (Exception e)
+        // {
+        //     return Results.BadRequest(e.Message);
+        // }
         return Results.Ok();
     }
 }
