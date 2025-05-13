@@ -7,7 +7,7 @@ public interface IDatabaseRepository
 {
     public IEnumerable<DeviceDTO> GetAllDevices();
     
-    public Device GetDeviceById(string id);
+    public Device? GetDeviceById(string id);
 
     public void AddSmartWatch(SmartWatch smartWatch);
 

@@ -8,7 +8,7 @@ public interface IDeviceService
 {
     public IEnumerable<DeviceDTO> GetAllDevices();
     
-    public Device GetDeviceById(string id);
+    public Device? GetDeviceById(string id);
 
     public bool AddDeviceByJson(JsonNode? json);
     

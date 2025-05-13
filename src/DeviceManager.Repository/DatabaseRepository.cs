@@ -50,7 +50,7 @@ public class DatabaseRepository : IDatabaseRepository
         }
     }
     
-    public Device GetDeviceById(string id)
+    public Device? GetDeviceById(string id)
     {
         var query = "SELECT * FROM Device";
 

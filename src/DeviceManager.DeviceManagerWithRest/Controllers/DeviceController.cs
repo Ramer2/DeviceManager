@@ -20,8 +20,9 @@ public class DeviceController : ControllerBase
     public IResult GetAllDevices()
     {
         var devices = _deviceService.GetAllDevices();
-        if (devices == null) return Results.NotFound();
-        return Results.Ok(devices);
+        var deviceDtos = devices.ToList();
+        if (!deviceDtos.Any()) return Results.NotFound();
+        return Results.Ok(deviceDtos);
     }
     
     [HttpGet]

@@ -22,7 +22,7 @@ public class DeviceService : IDeviceService
         return _databaseRepository.GetAllDevices();
     }
 
-    public Device GetDeviceById(string id)
+    public Device? GetDeviceById(string id)
     {
         return _databaseRepository.GetDeviceById(id);
     }
